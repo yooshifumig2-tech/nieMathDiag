@@ -1546,6 +1546,46 @@
         border-color: #7667db;
         box-shadow: 0 0 0 3px rgba(109, 92, 231, 0.1);
       }
+      .socratic-options {
+        display: grid;
+        gap: 6px;
+      }
+      .socratic-options button {
+        border: 1px solid #e0dcef;
+        background: #fcfbff;
+        border-radius: 8px;
+        padding: 7px 8px;
+        display: grid;
+        grid-template-columns: 20px 1fr;
+        gap: 7px;
+        align-items: start;
+        text-align: left;
+        color: #504b60;
+        font: inherit;
+        font-size: 10px;
+        line-height: 1.45;
+        cursor: pointer;
+      }
+      .socratic-options button:hover {
+        border-color: #b4a9e7;
+      }
+      .socratic-options button.selected {
+        border-color: #6d5ce7;
+        background: #f0edff;
+        color: #413875;
+        box-shadow: 0 0 0 2px rgba(109, 92, 231, 0.1);
+      }
+      .socratic-options i {
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        background: #eeeaff;
+        color: #6559c5;
+        font-style: normal;
+        font-size: 9px;
+      }
       .map-level-1 {
         margin-left: 18px;
         border-style: dashed;
@@ -3536,18 +3576,19 @@
           } catch {}
         }
         function ot() {
-          function a(t, e, r) {
-            return { id: t, title: e, note: r, color: w[0], children: [] };
-          }
           return {
             mindmap: {
-              center: "我的数学能力地图",
-              branches: [
-                a("base-number", "数与式", "概念、运算与规律"),
-                a("base-equation", "方程与函数", "建模、求解与图象"),
-                a("base-geometry", "图形与几何", "性质、推理与证明"),
-                a("base-data", "统计与概率", "数据整理与判断"),
-              ],
+              center: "我的北京中考数学能力地图",
+              branches: E.map(function (a, t) {
+                return {
+                  id: "domain-" + t,
+                  title: a,
+                  note: socraticFocus(a),
+                  color: w[t % w.length],
+                  children: [],
+                  autoSync: !0,
+                };
+              }),
             },
             orid: { o: "", r: "", i: "", d: "", updatedAt: null },
             socratic: {},
@@ -3568,6 +3609,7 @@
                       note: String(c.note || "").slice(0, 120),
                       color:
                         w.indexOf(c.color) >= 0 ? c.color : w[p % w.length],
+                      autoSync: c.autoSync !== !1,
                       children: Array.isArray(c.children)
                         ? c.children.slice(0, 6).map(function (f, g) {
                             return s(f, p + "-" + g);
@@ -3611,32 +3653,12 @@
           );
         }
         var socraticKinds = [
-          [
-            "clarify",
-            "澄清题意",
-            "这道题要你求、证或判断什么？哪些条件是已知的？",
-          ],
-          [
-            "evidence",
-            "寻找依据",
-            "你准备使用哪一个定义、法则、公式或图形性质？依据在哪里？",
-          ],
-          [
-            "assumption",
-            "检查假设",
-            "你是否默认了某个条件？题目真的给出了吗？",
-          ],
-          [
-            "alternative",
-            "比较路径",
-            "除了当前方法，还能画图、列式、代入或分类讨论吗？",
-          ],
-          [
-            "check",
-            "推论检验",
-            "结果是否满足范围、单位、特殊值或原题条件？怎样检验？",
-          ],
-          ["reflect", "反思迁移", "最容易错在哪一步？遇到同类题时你先做什么？"],
+          ["clarify", "澄清题意"],
+          ["evidence", "寻找依据"],
+          ["assumption", "检查假设"],
+          ["alternative", "比较路径"],
+          ["check", "推论检验"],
+          ["reflect", "反思迁移"],
         ];
         function socraticFocus(t) {
           return (
@@ -3654,28 +3676,137 @@
         }
         function socraticPanel(t) {
           var a = v.socratic[t.id] || {};
+          function e(r) {
+            var n = t.errorTags && t.errorTags[0] ? t.errorTags[0] : "题意条件";
+            return {
+              clarify: [
+                "本题开始时最需要先确认什么？",
+                ["题目给出的条件与要求", "只看数值大小", "先从选项猜答案"],
+              ],
+              evidence: [
+                "本题最合适的解题依据是？",
+                [
+                  t.point + "：" + (t.hint || "依据题目条件建立关系"),
+                  "忽略“" + n + "”直接计算",
+                  "套用与题意无关的公式",
+                ],
+              ],
+              assumption: [
+                "本题最需要警惕的易错概念是？",
+                [n, "把题目没有给出的条件当作成立", "不需要检查条件"],
+              ],
+              alternative: [
+                "如果不确定，哪种做法更可靠？",
+                [
+                  "回到题干，用画图、列式或代入核验",
+                  "跳过条件直接选看起来顺眼的答案",
+                  "只重复计算同一步",
+                ],
+              ],
+              check: [
+                "得到结果后，怎样检验最有效？",
+                [
+                  "用原题条件、范围或代回原式检验",
+                  "只看结果是不是整数",
+                  "和同学答案不同就改掉",
+                ],
+              ],
+              reflect: [
+                "下次遇到同类题，第一步应该是？",
+                [
+                  "先标记“" + t.point + "”和关键条件",
+                  "先背出所有公式再说",
+                  "先忽略易错点“" + n + "”",
+                ],
+              ],
+            }[r];
+          }
           return (
             '<details class="socratic-panel" open><summary><span>苏格拉底追问 · ' +
             o(t.domain) +
             '</span><small>6类追问 · 回答会自动同步到思维导图</small></summary><p class="socratic-focus">' +
             o(socraticFocus(t.domain)) +
-            '</p><div class="socratic-grid">' +
+            '</p><div class="socratic-grid socratic-choice-grid">' +
             socraticKinds
               .map(function (e, r) {
+                var n = e[0],
+                  d = (function () {
+                    return (t.errorTags && t.errorTags[0]) || "题意条件";
+                  })(),
+                  s = {
+                    clarify: [
+                      "本题开始时最需要先确认什么？",
+                      [
+                        "题目给出的条件与要求",
+                        "只看数值大小",
+                        "先从选项猜答案",
+                      ],
+                    ],
+                    evidence: [
+                      "本题最合适的解题依据是？",
+                      [
+                        t.point + "：" + (t.hint || "依据题目条件建立关系"),
+                        "忽略“" + d + "”直接计算",
+                        "套用与题意无关的公式",
+                      ],
+                    ],
+                    assumption: [
+                      "本题最需要警惕的易错概念是？",
+                      [d, "把题目没有给出的条件当作成立", "不需要检查条件"],
+                    ],
+                    alternative: [
+                      "如果不确定，哪种做法更可靠？",
+                      [
+                        "回到题干，用画图、列式或代入核验",
+                        "跳过条件直接选看起来顺眼的答案",
+                        "只重复计算同一步",
+                      ],
+                    ],
+                    check: [
+                      "得到结果后，怎样检验最有效？",
+                      [
+                        "用原题条件、范围或代回原式检验",
+                        "只看结果是不是整数",
+                        "和同学答案不同就改掉",
+                      ],
+                    ],
+                    reflect: [
+                      "下次遇到同类题，第一步应该是？",
+                      [
+                        "先标记“" + t.point + "”和关键条件",
+                        "先背出所有公式再说",
+                        "先忽略易错点“" + d + "”",
+                      ],
+                    ],
+                  }[n];
                 return (
                   "<label><b><i>" +
                   (r + 1) +
                   "</i>" +
                   o(e[1]) +
                   "</b><span>" +
-                  o(e[2]) +
-                  '</span><textarea data-socratic-field="' +
-                  e[0] +
-                  '" data-socratic-qid="' +
-                  t.id +
-                  '" maxlength="260" rows="2" placeholder="写下你的想法（可选）">' +
-                  o(a[e[0]] || "") +
-                  "</textarea></label>"
+                  o(s[0]) +
+                  '</span><div class="socratic-options">' +
+                  s[1]
+                    .map(function (p, f) {
+                      return (
+                        '<button data-action="select-socratic" data-socratic-qid="' +
+                        t.id +
+                        '" data-socratic-key="' +
+                        n +
+                        '" data-socratic-choice="' +
+                        f +
+                        '" class="' +
+                        (Number(a[n]) === f ? "selected" : "") +
+                        '"><i>' +
+                        String.fromCharCode(65 + f) +
+                        "</i>" +
+                        o(p) +
+                        "</button>"
+                      );
+                    })
+                    .join("") +
+                  "</div></label>"
                 );
               })
               .join("") +
@@ -3697,23 +3828,76 @@
           }
           return !1;
         }
-        function syncSocraticMap() {
-          var t = j(),
-            a = v.mindmap.branches,
-            e = findMapNode(a, "auto-socratic-root");
-          e ||
-            ((e = {
-              id: "auto-socratic-root",
-              title: "诊断追问与证据",
-              note: "做题情况与苏格拉底思考自动汇总",
-              color: "#5f57c8",
-              children: [],
-              autoSync: !0,
+        function ensureAssessmentMap() {
+          var t = v.mindmap.branches.filter(function (a) {
+              return (
+                a.id.indexOf("base-") !== 0 && a.id !== "auto-socratic-root"
+              );
             }),
-            a.push(e));
-          e.autoSync !== !1 &&
-            ((e.title = "诊断追问与证据"),
-            (e.note = "做题情况与苏格拉底思考自动汇总"));
+            e = [];
+          E.forEach(function (a, r) {
+            var n = t.find(function (d) {
+              return d.id === "domain-" + r;
+            });
+            n ||
+              (n = {
+                id: "domain-" + r,
+                title: a,
+                note: socraticFocus(a),
+                color: w[r % w.length],
+                children: [],
+                autoSync: !0,
+              });
+            n.autoSync !== !1 &&
+              ((n.title = a),
+              (n.note = socraticFocus(a)),
+              (n.color = w[r % w.length]));
+            e.push(n);
+          });
+          v.mindmap.branches = e.concat(
+            t.filter(function (a) {
+              return a.id.indexOf("domain-") !== 0;
+            }),
+          );
+        }
+        function selectedSocraticText(t, a) {
+          var e = (v.socratic[t.id] || {})[a];
+          if (typeof e === "string") return e;
+          if (typeof e !== "number") return "";
+          var r = t.errorTags && t.errorTags[0] ? t.errorTags[0] : "题意条件",
+            n = {
+              clarify: [
+                "题目给出的条件与要求",
+                "只看数值大小",
+                "先从选项猜答案",
+              ],
+              evidence: [
+                t.point + "：" + (t.hint || "依据题目条件建立关系"),
+                "忽略“" + r + "”直接计算",
+                "套用与题意无关的公式",
+              ],
+              assumption: [r, "把题目没有给出的条件当作成立", "不需要检查条件"],
+              alternative: [
+                "回到题干，用画图、列式或代入核验",
+                "跳过条件直接选看起来顺眼的答案",
+                "只重复计算同一步",
+              ],
+              check: [
+                "用原题条件、范围或代回原式检验",
+                "只看结果是不是整数",
+                "和同学答案不同就改掉",
+              ],
+              reflect: [
+                "先标记“" + t.point + "”和关键条件",
+                "先背出所有公式再说",
+                "先忽略易错点“" + r + "”",
+              ],
+            };
+          return (n[a] || [])[e] || "";
+        }
+        function syncSocraticMap() {
+          ensureAssessmentMap();
+          var t = j();
           E.forEach(function (r, n) {
             var d = m.filter(function (c) {
                 return c.domain === r;
@@ -3722,29 +3906,8 @@
                 return O(i.answers[c.id]);
               }).length,
               p = t.domainStats[n],
-              f = e.children.find(function (c) {
-                return c.id === "auto-domain-" + n;
-              });
-            f ||
-              ((f = {
-                id: "auto-domain-" + n,
-                title: r,
-                note: "",
-                color: w[n % w.length],
-                children: [],
-                autoSync: !0,
-              }),
-              e.children.push(f));
-            f.autoSync !== !1 &&
-              ((f.title = r),
-              (f.note =
-                "已答 " +
-                s +
-                "/" +
-                d.length +
-                " 题 · 当前掌握 " +
-                p.score +
-                "%"));
+              f = findMapNode(v.mindmap.branches, "domain-" + n);
+            f.autoSync !== !1 && ((f.title = r), (f.note = socraticFocus(r)));
             var g = f.children.find(function (c) {
               return c.id === "auto-evidence-" + n;
             });
@@ -3771,7 +3934,8 @@
             d.forEach(function (c) {
               var x = v.socratic[c.id] || {};
               socraticKinds.forEach(function (at) {
-                x[at[0]] && l.push(at[1] + "：" + Y(x[at[0]], 42));
+                x[at[0]] &&
+                  l.push(at[1] + "：" + Y(selectedSocraticText(c, at[0]), 42));
               });
             });
             var u = f.children.find(function (c) {
@@ -3790,7 +3954,29 @@
             u.autoSync !== !1 &&
               (u.note = l.length
                 ? l.slice(0, 4).join("；")
-                : "尚未填写追问回应");
+                : "尚未完成易错概念选择");
+            var x = f.children.find(function (c) {
+                return c.id === "auto-errors-" + n;
+              }),
+              at = Array.from(
+                new Set(
+                  d.reduce(function (c, p) {
+                    return c.concat(p.errorTags || []);
+                  }, []),
+                ),
+              );
+            x ||
+              ((x = {
+                id: "auto-errors-" + n,
+                title: "易错概念",
+                note: "",
+                color: f.color,
+                children: [],
+                autoSync: !0,
+              }),
+              f.children.splice(1, 0, x));
+            x.autoSync !== !1 &&
+              (x.note = at.length ? at.join(" · ") : "完成作答后自动定位");
           });
           k();
         }
@@ -4173,6 +4359,7 @@
           syncSocraticMap();
           var t = v.mindmap;
           function a(e, r) {
+            var n = r === 0 && e.id.indexOf("domain-") === 0;
             return (
               '<article class="map-editor-row map-level-' +
               r +
@@ -4191,9 +4378,15 @@
               o(e.note) +
               '</textarea><div class="map-node-actions"><button data-action="add-map-child" data-map-id="' +
               e.id +
-              '">＋ 子分支</button><button data-action="remove-map-node" data-map-id="' +
-              e.id +
-              '">删除</button></div></div></article>' +
+              '">' +
+              (n ? "＋ 添加到该考核板块" : "＋ 子分支") +
+              "</button>" +
+              (n
+                ? ""
+                : '<button data-action="remove-map-node" data-map-id="' +
+                  e.id +
+                  '">删除</button>') +
+              "</div></div></article>" +
               (e.children || [])
                 .map(function (n) {
                   return a(n, r + 1);
@@ -4207,15 +4400,13 @@
             })
             .join("");
           return (
-            '<div class="page-shell learning-page"><section class="learning-head"><div><span class="section-kicker">学生学习作品</span><h1>数学思维导图</h1><p>支持一级分支与多级子分支。做题情况和苏格拉底追问会自动同步到“诊断追问与证据”，并可继续编辑。</p></div><div><button class="ghost-button" data-action="map-from-report" ' +
+            '<div class="page-shell learning-page"><section class="learning-head"><div><span class="section-kicker">学生学习作品</span><h1>数学思维导图</h1><p>8个考核板块是固定的一级分支；做题情况、易错概念和苏格拉底选择会写入各自对应板块下。你可以继续在板块内添加子分支。</p></div><div><button class="ghost-button" data-action="map-from-report" ' +
             (i.submitted ? "" : "disabled") +
             '>从诊断报告生成</button><button class="primary-button" data-action="export-map-pdf">导出PDF</button></div></section><section class="mindmap-workspace"><aside class="mindmap-editor"><div class="tool-save-note"><b>自动保存</b><span>内容仅保存在这个浏览器</span></div><label class="center-topic-label">中心主题<input data-map-center maxlength="40" value="' +
             o(t.center) +
             '" placeholder="例如：我的八年级数学"></label><div class="map-editor-list">' +
             e +
-            '</div><button class="add-branch-button" data-action="add-map-branch" ' +
-            (t.branches.length >= 10 ? "disabled" : "") +
-            '>＋ 添加分支（最多10个）</button></aside><div class="mindmap-preview"><div class="preview-label"><span>实时预览</span><small>导出时会自动使用适合A4横向打印的版式</small></div><div data-map-preview>' +
+            '</div></aside><div class="mindmap-preview"><div class="preview-label"><span>实时预览</span><small>导出时会自动使用适合A4横向打印的版式</small></div><div data-map-preview>' +
             G() +
             "</div></div></section></div>"
           );
@@ -4304,25 +4495,36 @@
           if (i.submitted) {
             var t = j();
             (v.mindmap.center = "我的中考数学补强地图"),
-              (v.mindmap.branches = t.chapterStats
-                .slice()
-                .sort(function (a, e) {
-                  return a.score - e.score;
-                })
-                .slice(0, 6)
-                .map(function (a, e) {
-                  return {
-                    id: "report-" + e,
-                    title: a.chapter,
-                    note:
-                      "掌握度 " +
-                      a.score +
-                      "% · " +
-                      (a.score < 60 ? "优先复习" : "继续巩固"),
-                    color: w[e],
+              syncSocraticMap(),
+              E.forEach(function (a, e) {
+                var r = findMapNode(v.mindmap.branches, "domain-" + e),
+                  n = t.chapterStats
+                    .filter(function (d) {
+                      return d.rows[0] && d.rows[0].question.domain === a;
+                    })
+                    .sort(function (d, s) {
+                      return d.score - s.score;
+                    })
+                    .slice(0, 2)
+                    .map(function (d) {
+                      return d.chapter + " " + d.score + "%";
+                    })
+                    .join(" · "),
+                  d = r.children.find(function (s) {
+                    return s.id === "auto-priority-" + e;
+                  });
+                d ||
+                  ((d = {
+                    id: "auto-priority-" + e,
+                    title: "优先复习",
+                    note: "",
+                    color: r.color,
                     children: [],
-                  };
-                })),
+                    autoSync: !0,
+                  }),
+                  r.children.push(d)),
+                  d.autoSync !== !1 && (d.note = n || "完成诊断后生成");
+              }),
               k(),
               h();
           }
@@ -5182,7 +5384,14 @@
                 .scrollIntoView({ behavior: "smooth" });
             else if (e === "select")
               N(decodeURIComponent(a.dataset.value)), h();
-            else if (e === "prev")
+            else if (e === "select-socratic") {
+              var st = a.dataset.socraticQid,
+                pt = a.dataset.socraticKey;
+              v.socratic[st] || (v.socratic[st] = {}),
+                (v.socratic[st][pt] = Number(a.dataset.socraticChoice)),
+                syncSocraticMap(),
+                h();
+            } else if (e === "prev")
               (i.current = Math.max(0, i.current - 1)), A(), h();
             else if (e === "next")
               (i.current = Math.min(m.length - 1, i.current + 1)), A(), h();
@@ -5269,14 +5478,6 @@
                 (a.autoSync = !1)),
                 k(),
                 $();
-              return;
-            }
-            if (t.target.matches("[data-socratic-field]")) {
-              var s = t.target.dataset.socraticQid,
-                c = t.target.dataset.socraticField;
-              v.socratic[s] || (v.socratic[s] = {}),
-                (v.socratic[s][c] = t.target.value.slice(0, 260)),
-                syncSocraticMap();
               return;
             }
             if (t.target.matches("[data-orid-field]")) {
