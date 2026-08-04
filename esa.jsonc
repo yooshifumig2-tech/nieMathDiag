@@ -1,0 +1,10 @@
+{
+  "name": "nie-math-diagnostic",
+  "entry": "./esa-functions/index.js",
+  "installCommand": "",
+  "buildCommand": "",
+  "assets": {
+    "directory": "./public",
+    "notFoundStrategy": "singlePageApplication"
+  }
+}
