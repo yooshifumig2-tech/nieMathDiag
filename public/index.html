@@ -2748,6 +2748,385 @@
         background: rgba(255, 255, 255, 0.16);
         color: #fff;
       }
+
+      /* DOLLY learning-hub visual system: warm paper, editorial cards and
+         clear blue/orange learning actions. The diagnostic data model and
+         page structure remain unchanged. */
+      :root {
+        --ink: #20262e;
+        --muted: #68727f;
+        --paper: #f7f5ef;
+        --white: #fff;
+        --line: #e6e2d8;
+        --purple: #2878d4;
+        --purple-dark: #1f4668;
+        --purple-soft: #eaf3ff;
+        --pink: #e56b31;
+        --mint: #25875e;
+        --shadow: 0 18px 45px rgba(28, 45, 62, 0.1);
+      }
+      body {
+        background:
+          radial-gradient(
+            circle at 8% 4%,
+            rgba(40, 120, 212, 0.08),
+            transparent 28rem
+          ),
+          var(--paper);
+        color: var(--ink);
+      }
+      ::selection {
+        background: #d9eaff;
+      }
+      .topbar {
+        height: 72px;
+        padding: 0 max(24px, calc((100vw - 1180px) / 2));
+        border-bottom: 1px solid var(--line);
+        background: rgba(247, 245, 239, 0.94);
+        box-shadow: 0 7px 24px rgba(31, 70, 104, 0.04);
+      }
+      .brand-mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        background: var(--navy, #1f4668);
+        box-shadow: 0 9px 22px rgba(31, 70, 104, 0.2);
+        transform: none;
+      }
+      .brand-mark span {
+        transform: none;
+      }
+      .brand b {
+        color: #1f4668;
+        letter-spacing: 0.06em;
+      }
+      .topbar nav {
+        gap: 7px;
+        height: auto;
+        padding: 5px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+      .topbar nav button {
+        height: 38px;
+        padding: 0 13px;
+        border-radius: 999px;
+        font-weight: 700;
+      }
+      .topbar nav button.active {
+        color: #fff;
+        background: #1f4668;
+      }
+      .topbar nav button.active::after {
+        display: none;
+      }
+      .privacy-pill,
+      .timer-mini {
+        border-color: var(--line);
+        background: #fff;
+      }
+      .privacy-pill::before {
+        color: #25875e;
+      }
+      .page-shell {
+        width: min(1180px, calc(100% - 40px));
+      }
+      .offline-banner {
+        border-color: #cfe0f3;
+        background: #eef6ff;
+        color: #1f4668;
+      }
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background:
+          linear-gradient(
+            120deg,
+            rgba(255, 255, 255, 0.96),
+            rgba(255, 250, 242, 0.92)
+          ),
+          #fff;
+        box-shadow: var(--shadow);
+        padding: clamp(38px, 6vw, 76px);
+      }
+      .hero > * {
+        position: relative;
+        z-index: 1;
+      }
+      .hero::after {
+        content: "";
+        position: absolute;
+        width: 330px;
+        height: 330px;
+        right: -90px;
+        top: -125px;
+        border-radius: 50%;
+        border: 54px solid rgba(40, 120, 212, 0.07);
+        pointer-events: none;
+      }
+      .eyebrow span,
+      .section-kicker,
+      .section-heading > div > span {
+        color: #2878d4;
+        background: #eaf3ff;
+        border-color: #cfe2f8;
+      }
+      .hero h1,
+      .learning-head h1,
+      .report-hero h1,
+      .section-heading h2 {
+        color: #1f4668;
+        font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+        letter-spacing: -0.025em;
+      }
+      .hero h1 em {
+        color: #e56b31;
+      }
+      .hero h1 em::after {
+        background: rgba(229, 107, 49, 0.14);
+      }
+      .primary-button,
+      .next-button,
+      .submit-button {
+        background: #2878d4;
+        box-shadow: 0 10px 24px rgba(40, 120, 212, 0.2);
+      }
+      .primary-button:hover,
+      .next-button:hover,
+      .submit-button:hover {
+        background: #1f66b4;
+      }
+      .ghost-button {
+        border-color: #cfd9e3;
+        background: #fff;
+        color: #1f4668;
+      }
+      .hero-map {
+        background: radial-gradient(
+          circle,
+          #fff 0 34%,
+          #eaf3ff 35% 48%,
+          transparent 49%
+        );
+      }
+      .map-center {
+        color: #fff;
+        background: #1f4668;
+        box-shadow: 0 18px 42px rgba(31, 70, 104, 0.24);
+      }
+      .orbit {
+        border-color: rgba(40, 120, 212, 0.22);
+      }
+      .hero-card,
+      .quick-stats article,
+      .domain-card,
+      .methodology-card,
+      .learning-tools-callout,
+      .mindmap-workspace,
+      .orid-card,
+      .question-card,
+      .socratic-card {
+        border-color: var(--line);
+        background: #fff;
+        box-shadow: var(--shadow);
+      }
+      .quick-stats article b,
+      .domain-card h3 {
+        color: #1f4668;
+      }
+      .learning-tools-callout {
+        background: linear-gradient(120deg, #1f4668, #285c82);
+      }
+      .learning-tools-callout button b {
+        background: #e56b31;
+      }
+      .question-sidebar {
+        background: #1f4668;
+      }
+      .progress-track i,
+      .orid-progress i {
+        background: #e56b31;
+      }
+      .domain-nav button.current {
+        background: #fff;
+        color: #1f4668;
+      }
+      .domain-nav button.done {
+        color: #d9f1e6;
+      }
+      .question-topline,
+      .question-footer {
+        border-color: var(--line);
+      }
+      .question-meta span:first-child,
+      .difficulty,
+      .tag {
+        background: #eaf3ff;
+        color: #1f4668;
+        border-color: #cfe2f8;
+      }
+      .option-button:hover,
+      .option-button.selected {
+        border-color: #2878d4;
+        background: #eef6ff;
+      }
+      .socratic-card {
+        box-shadow: none;
+        border-left: 4px solid #e56b31;
+      }
+      .socratic-options button.selected {
+        border-color: #e56b31;
+        background: #fff0e6;
+        color: #9c431d;
+      }
+      .report-hero {
+        background: linear-gradient(120deg, #1f4668, #2878d4);
+      }
+      .report-hero h1,
+      .report-hero p {
+        color: #fff;
+      }
+      .score-ring {
+        stroke: #e56b31;
+      }
+      .review-ai-button,
+      .question-ai-button {
+        border: 1px solid #c9daf0;
+        background: #eaf3ff;
+        color: #1f5f9f;
+        border-radius: 999px;
+        padding: 9px 13px;
+        font-size: 12px;
+        font-weight: 850;
+        cursor: pointer;
+      }
+      .review-ai-button:hover,
+      .question-ai-button:hover {
+        color: #fff;
+        background: #2878d4;
+      }
+      .question-title-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+      }
+      .question-title-row h2 {
+        flex: 1;
+        margin-top: 0;
+      }
+      .question-ai-button {
+        flex: none;
+        margin-top: 1px;
+        white-space: nowrap;
+      }
+      .fumi-ai-fab {
+        right: 20px;
+        bottom: 20px;
+        background: #e56b31;
+        box-shadow: 0 14px 32px rgba(111, 57, 28, 0.28);
+      }
+      .fumi-ai-fab span,
+      .fumi-ai-head > div > span {
+        background: #1f4668;
+      }
+      .fumi-ai-fab.open {
+        transform: none;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .fumi-ai-panel {
+        top: auto;
+        right: 18px;
+        bottom: 78px;
+        width: min(430px, calc(100vw - 28px));
+        height: min(650px, calc(100vh - 100px));
+        border: 1px solid #ad9b7e;
+        border-radius: 20px;
+        background: #fffaf2;
+        box-shadow: 0 28px 70px rgba(20, 31, 38, 0.25);
+        transform: translateY(16px) scale(0.98);
+        transform-origin: right bottom;
+        opacity: 0;
+        transition: 0.22s ease;
+      }
+      .fumi-ai-panel.open {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      .fumi-ai-head {
+        background: #1f4668;
+        color: #fff;
+        border-radius: 19px 19px 0 0;
+        border-color: transparent;
+      }
+      .fumi-ai-head small,
+      .fumi-ai-head > button {
+        color: rgba(255, 255, 255, 0.72);
+      }
+      .fumi-ai-context {
+        color: #5d554b;
+        background: #fff0e6;
+        border-color: #f0d1bd;
+      }
+      .fumi-ai-context b {
+        color: #9c431d;
+      }
+      .fumi-ai-form button {
+        background: #e56b31;
+      }
+      .fumi-ai-quick button {
+        border-color: #cfe2f8;
+        color: #1f5f9f;
+      }
+      .fumi-ai-msg.system {
+        background: #eef6ff;
+        color: #365c78;
+      }
+      .fumi-ai-msg.student {
+        background: #1f4668;
+        border-color: #1f4668;
+      }
+      .fumi-ai-thinking i {
+        background: #e56b31;
+      }
+      @media (max-width: 760px) {
+        .topbar {
+          padding-inline: 14px;
+        }
+        .topbar nav {
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+        }
+        .topbar nav button.active {
+          background: #1f4668;
+        }
+        .page-shell {
+          width: min(100% - 24px, 1180px);
+        }
+        .hero {
+          padding: 28px 22px;
+          border-radius: 22px;
+        }
+        .question-title-row {
+          display: block;
+        }
+        .question-ai-button {
+          margin: 0 0 14px;
+        }
+        .fumi-ai-panel {
+          right: 0;
+          bottom: 0;
+          width: 100vw;
+          height: calc(100dvh - 20px);
+          max-height: none;
+          border-radius: 20px 20px 0 0;
+        }
+      }
     </style>
   </head>
   <body>
@@ -2755,8 +3134,8 @@
       <div class="no-script-home">
         <header class="topbar">
           <div class="brand">
-            <div class="brand-mark"><span>∑</span></div>
-            <span><b>FUMI</b><small>数学能力地图</small></span>
+            <div class="brand-mark"><span>F</span></div>
+            <span><b>FUMI MATH</b><small>数学能力地图</small></span>
           </div>
           <div class="top-actions">
             <span class="privacy-pill">轻量离线版</span>
@@ -3823,7 +4202,7 @@
         }
         function removeMapNode(t, a) {
           for (var e = t.length - 1; e >= 0; e--) {
-            if (t[e].id === a) return t.splice(e, 1), !0;
+            if (t[e].id === a) return (t.splice(e, 1), !0);
             if (removeMapNode(t[e].children || [], a)) return !0;
           }
           return !1;
@@ -4232,12 +4611,12 @@
           if (!(!e || M)) {
             var r = W(),
               n = (y.chats[r.key] || []).slice();
-            (y.chats[r.key] = n
+            ((y.chats[r.key] = n
               .concat([{ role: "user", content: e }])
               .slice(-20)),
               _(),
               (M = !0),
-              I();
+              I());
             try {
               var d = await vt(e, r, n),
                 s = d.nextAction
@@ -4258,7 +4637,7 @@
                 ])
                 .slice(-20);
             } finally {
-              (M = !1), _(), I();
+              ((M = !1), _(), I());
             }
           }
         }
@@ -4494,7 +4873,7 @@
         function bt() {
           if (i.submitted) {
             var t = j();
-            (v.mindmap.center = "我的中考数学补强地图"),
+            ((v.mindmap.center = "我的中考数学补强地图"),
               syncSocraticMap(),
               E.forEach(function (a, e) {
                 var r = findMapNode(v.mindmap.branches, "domain-" + e),
@@ -4513,7 +4892,7 @@
                   d = r.children.find(function (s) {
                     return s.id === "auto-priority-" + e;
                   });
-                d ||
+                (d ||
                   ((d = {
                     id: "auto-priority-" + e,
                     title: "优先复习",
@@ -4523,10 +4902,10 @@
                     autoSync: !0,
                   }),
                   r.children.push(d)),
-                  d.autoSync !== !1 && (d.note = n || "完成诊断后生成");
+                  d.autoSync !== !1 && (d.note = n || "完成诊断后生成"));
               }),
               k(),
-              h();
+              h());
           }
         }
         function gt() {
@@ -4542,7 +4921,7 @@
                   return e.chapter + "（" + e.score + "%）";
                 })
                 .join("、");
-            (v.orid.o =
+            ((v.orid.o =
               "我完成了40分钟数学诊断，共作答" +
               F() +
               "/" +
@@ -4560,7 +4939,7 @@
                   "接下来一周，我会先重做报告中的错题；再选择一个薄弱章节，完成“概念复述—例题拆解—5道同类题—订正总结”四步练习。"),
               (v.orid.updatedAt = Date.now()),
               k(),
-              h();
+              h());
           }
         }
         function tt(t, a, e, r) {
@@ -4572,7 +4951,7 @@
           try {
             n.opener = null;
           } catch {}
-          n.document.open(),
+          (n.document.open(),
             n.document.write(
               '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>' +
                 o(t) +
@@ -4588,7 +4967,7 @@
                 new Date().toLocaleString("zh-CN") +
                 "</footer><script>setTimeout(function(){window.print()},350)<\/script></body></html>",
             ),
-            n.document.close();
+            n.document.close());
         }
         function yt() {
           var t = [];
@@ -4650,7 +5029,7 @@
         }
         function xt() {
           return (
-            '<header class="topbar"><button class="brand" data-action="home" aria-label="返回首页"><div class="brand-mark"><span>∑</span></div><span><b>FUMI</b><small>数学能力地图</small></span></button><nav aria-label="主要导航"><button data-action="home" class="' +
+            '<header class="topbar"><button class="brand" data-action="home" aria-label="返回首页"><div class="brand-mark"><span>F</span></div><span><b>FUMI MATH</b><small>数学能力地图</small></span></button><nav aria-label="主要导航"><button data-action="home" class="' +
             (b === "home" ? "active" : "") +
             '">能力地图</button><button data-action="start" class="' +
             (b === "test" ? "active" : "") +
@@ -4864,9 +5243,9 @@
               : t.type === "input"
                 ? "填空题"
                 : "选择题") +
-            "</span></div><h2>" +
+            '</span></div><div class="question-title-row"><h2>' +
             o(t.stem) +
-            "</h2>" +
+            '</h2><button class="question-ai-button" data-action="ask-current">✦ 问 FUMI AI</button></div>' +
             (t.diagram
               ? '<div class="diagram-card">' + V(t.diagram, 3) + "</div>"
               : "") +
@@ -5069,7 +5448,7 @@
             var e = j().chapterStats.find(function (r) {
               return r.chapter === t;
             });
-            (a.innerHTML = e.rows
+            ((a.innerHTML = e.rows
               .map(function (r) {
                 var n = r.question,
                   d = Array.isArray(i.answers[n.id])
@@ -5138,7 +5517,7 @@
                 );
               })
               .join("")),
-              (a.dataset.loaded = "1");
+              (a.dataset.loaded = "1"));
           }
         }
         function Ft() {
@@ -5245,16 +5624,16 @@
                   : b === "mindmap"
                     ? ft()
                     : ht();
-          (D.innerHTML = xt() + t + '<div id="fumi-ai-widget"></div>'),
+          ((D.innerHTML = xt() + t + '<div id="fumi-ai-widget"></div>'),
             I(),
             window.scrollTo(0, 0),
-            et();
+            et());
         }
         function et() {
           var t = J(),
             a = document.getElementById("timer-large"),
             e = document.getElementById("timer-mini");
-          a && (a.textContent = R(t)),
+          (a && (a.textContent = R(t)),
             e && (e.textContent = R(t)),
             t <= 300 &&
               (a && a.parentElement && a.parentElement.classList.add("warning"),
@@ -5266,20 +5645,20 @@
               (i.completedAt = Date.now()),
               (b = "report"),
               A(),
-              h());
+              h()));
         }
         function Tt() {
-          z && clearInterval(z), (z = setInterval(et, 1e3));
+          (z && clearInterval(z), (z = setInterval(et, 1e3)));
         }
         function Et() {
-          i.startedAt || (i.startedAt = Date.now()),
+          (i.startedAt || (i.startedAt = Date.now()),
             (i.submitted = !1),
             (b = "test"),
             A(),
-            h();
+            h());
         }
         function N(t) {
-          (i.answers[m[i.current].id] = t), A(), syncSocraticMap();
+          ((i.answers[m[i.current].id] = t), A(), syncSocraticMap());
         }
         function Dt() {
           var t = m.length - F();
@@ -5301,7 +5680,7 @@
             try {
               localStorage.removeItem(P);
             } catch {}
-            (b = "home"), h();
+            ((b = "home"), h());
           }
         }
         function qt() {
@@ -5360,51 +5739,51 @@
             n = new Blob([r], { type: "text/html;charset=utf-8" }),
             d = URL.createObjectURL(n),
             s = document.createElement("a");
-          (s.href = d),
+          ((s.href = d),
             (s.download = "FUMI数学诊断匿名报告.html"),
             document.body.appendChild(s),
             s.click(),
             s.remove(),
             setTimeout(function () {
               URL.revokeObjectURL(d);
-            }, 1e3);
+            }, 1e3));
         }
-        document.addEventListener("click", function (t) {
+        (document.addEventListener("click", function (t) {
           var a = t.target.closest("[data-action]");
           if (a) {
             var e = a.dataset.action;
-            if (e === "home") (b = "home"), h();
+            if (e === "home") ((b = "home"), h());
             else if (e === "start") Et();
-            else if (e === "report" && i.submitted) (b = "report"), h();
-            else if (e === "mindmap") (b = "mindmap"), h();
-            else if (e === "orid") (b = "orid"), h();
+            else if (e === "report" && i.submitted) ((b = "report"), h());
+            else if (e === "mindmap") ((b = "mindmap"), h());
+            else if (e === "orid") ((b = "orid"), h());
             else if (e === "method")
               document
                 .getElementById("method")
                 .scrollIntoView({ behavior: "smooth" });
             else if (e === "select")
-              N(decodeURIComponent(a.dataset.value)), h();
+              (N(decodeURIComponent(a.dataset.value)), h());
             else if (e === "select-socratic") {
               var st = a.dataset.socraticQid,
                 pt = a.dataset.socraticKey;
-              v.socratic[st] || (v.socratic[st] = {}),
+              (v.socratic[st] || (v.socratic[st] = {}),
                 (v.socratic[st][pt] = Number(a.dataset.socraticChoice)),
                 syncSocraticMap(),
-                h();
+                h());
             } else if (e === "prev")
-              (i.current = Math.max(0, i.current - 1)), A(), h();
+              ((i.current = Math.max(0, i.current - 1)), A(), h());
             else if (e === "next")
-              (i.current = Math.min(m.length - 1, i.current + 1)), A(), h();
+              ((i.current = Math.min(m.length - 1, i.current + 1)), A(), h());
             else if (e === "goto")
-              (i.current = Number(a.dataset.index)), A(), h();
+              ((i.current = Number(a.dataset.index)), A(), h());
             else if (e === "order-add") {
               var r = i.answers[m[i.current].id],
                 n = Array.isArray(r) ? r.slice() : [];
-              n.push(decodeURIComponent(a.dataset.value)), N(n), h();
+              (n.push(decodeURIComponent(a.dataset.value)), N(n), h());
             } else if (e === "order-remove") {
               var d = i.answers[m[i.current].id],
                 s = Array.isArray(d) ? d.slice() : [];
-              s.splice(Number(a.dataset.index), 1), N(s), h();
+              (s.splice(Number(a.dataset.index), 1), N(s), h());
             } else if (e === "submit") Dt();
             else if (e === "reset") Lt();
             else if (e === "download-report") qt();
@@ -5412,7 +5791,7 @@
             else if (e === "add-map-branch") {
               if (v.mindmap.branches.length >= 10) return;
               var c = v.mindmap.branches.length;
-              v.mindmap.branches.push({
+              (v.mindmap.branches.push({
                 id: htId(),
                 title: "新分支",
                 note: "写下知识点或方法",
@@ -5420,7 +5799,7 @@
                 children: [],
               }),
                 k(),
-                h();
+                h());
             } else if (e === "add-map-child") {
               var x = findMapNode(v.mindmap.branches, a.dataset.mapId);
               x &&
@@ -5435,19 +5814,28 @@
                 k(),
                 h());
             } else if (e === "remove-map-node")
-              removeMapNode(v.mindmap.branches, a.dataset.mapId), k(), h();
+              (removeMapNode(v.mindmap.branches, a.dataset.mapId), k(), h());
             else if (e === "map-from-report") bt();
             else if (e === "orid-from-report") gt();
             else if (e === "export-map-pdf") yt();
             else if (e === "export-orid-pdf") wt();
-            else if (e === "toggle-ai") (S = !S), I();
-            else if (e === "close-ai") (S = !1), I();
-            else if (e === "ai-prompt") Z(decodeURIComponent(a.dataset.value));
+            else if (e === "toggle-ai") ((S = !S), I());
+            else if (e === "close-ai") ((S = !1), I());
+            else if (e === "ask-current") {
+              ((S = !0), I());
+              requestAnimationFrame(function () {
+                var t = document.querySelector("[data-ai-input]");
+                t &&
+                  ((t.value = "请先帮我判断这道题考查什么，并只提示第一步。"),
+                  t.focus());
+              });
+            } else if (e === "ai-prompt")
+              Z(decodeURIComponent(a.dataset.value));
             else if (e === "save-endpoint") {
               var p = document.querySelector("[data-ai-endpoint]");
-              (y.endpoint = p ? p.value.trim().slice(0, 500) : ""), _(), I();
+              ((y.endpoint = p ? p.value.trim().slice(0, 500) : ""), _(), I());
             } else if (e === "ask-review")
-              (i.current = Number(a.dataset.index)), A(), (S = !0), I();
+              ((i.current = Number(a.dataset.index)), A(), (S = !0), I());
             else if (e === "step") {
               var f = m.find(function (u) {
                   return u.id === a.dataset.qid;
@@ -5465,35 +5853,35 @@
         }),
           document.addEventListener("input", function (t) {
             if (t.target.matches("[data-map-center]")) {
-              (v.mindmap.center = t.target.value.slice(0, 40)), k(), $();
+              ((v.mindmap.center = t.target.value.slice(0, 40)), k(), $());
               return;
             }
             if (t.target.matches("[data-map-field]")) {
               var a = findMapNode(v.mindmap.branches, t.target.dataset.mapId);
-              a &&
+              (a &&
                 ((a[t.target.dataset.mapField] = t.target.value.slice(
                   0,
                   t.target.dataset.mapField === "title" ? 30 : 120,
                 )),
                 (a.autoSync = !1)),
                 k(),
-                $();
+                $());
               return;
             }
             if (t.target.matches("[data-orid-field]")) {
-              (v.orid[t.target.dataset.oridField] = t.target.value.slice(
+              ((v.orid[t.target.dataset.oridField] = t.target.value.slice(
                 0,
                 1200,
               )),
                 (v.orid.updatedAt = Date.now()),
-                k();
+                k());
               var e = C.filter(function (d) {
                   return v.orid[d.key].trim();
                 }).length,
                 r = document.querySelector(".orid-progress b"),
                 n = document.querySelector("[data-orid-progress]");
-              r && (r.textContent = e + "/4"),
-                n && (n.style.width = e * 25 + "%");
+              (r && (r.textContent = e + "/4"),
+                n && (n.style.width = e * 25 + "%"));
               return;
             }
             t.target.matches("[data-answer-input]") && N(t.target.value);
@@ -5518,14 +5906,14 @@
           window.addEventListener("error", function () {
             if (!(!D || D.querySelector(".runtime-error"))) {
               var t = document.createElement("div");
-              (t.className = "runtime-error"),
+              ((t.className = "runtime-error"),
                 (t.innerHTML =
                   "<b>交互功能加载失败</b><span>请先把HTML文件下载到“文件”中，再用Safari、Chrome或Edge打开；不要直接使用聊天窗口的文件预览。</span>"),
-                D.prepend(t);
+                D.prepend(t));
             }
           }),
           h(),
-          Tt();
+          Tt());
       })();
     </script>
   </body>
