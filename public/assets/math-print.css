@@ -1,0 +1,9 @@
+@media print {
+  body { background: #fff; }
+  .course-top, .ai-toggle, .ai-panel, .practice-filter, .footer-actions { display: none !important; }
+  .course-shell { max-width: none; padding: 0; }
+  .hero { box-shadow: none; print-color-adjust: exact; }
+  .card { box-shadow: none; break-inside: avoid; }
+  .practice-list .question { display: none; }
+  .report-grid { grid-template-columns: repeat(2, 1fr); }
+}
