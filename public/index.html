@@ -3896,7 +3896,10 @@
           K = "fumi-math-map:learning-tools:v1",
           H = 2400,
           D = document.getElementById("app"),
-          b = "home",
+          b = (function () {
+            var e = new URLSearchParams(location.search).get("view");
+            return e === "mindmap" || e === "orid" ? e : "home";
+          })(),
           z = null,
           S = !1,
           M = !1,
@@ -3933,7 +3936,7 @@
           }
         }
         var i = it();
-        i.submitted && (b = "report");
+        i.submitted && !new URLSearchParams(location.search).get("view") && (b = "report");
         function st() {
           try {
             var t = localStorage.getItem(X),
@@ -3990,7 +3993,7 @@
                         w.indexOf(c.color) >= 0 ? c.color : w[p % w.length],
                       autoSync: c.autoSync !== !1,
                       children: Array.isArray(c.children)
-                        ? c.children.slice(0, 6).map(function (f, g) {
+                        ? c.children.slice(0, 12).map(function (f, g) {
                             return s(f, p + "-" + g);
                           })
                         : [],
@@ -5041,7 +5044,7 @@
             (b === "mindmap" ? "active" : "") +
             '">思维导图</button><button data-action="orid" class="' +
             (b === "orid" ? "active" : "") +
-            '">ORID反思</button></nav><div class="top-actions"><span class="privacy-pill">离线运行 · 仅保存在本设备</span>' +
+            '">ORID反思</button><a href="math-learn.html" style="display:inline-flex;align-items:center;padding:8px 11px;border-radius:11px;color:#5549ac;text-decoration:none;font-weight:800;background:#f4f1ff">第13·14章学习</a><a href="math-practice.html" style="display:inline-flex;align-items:center;padding:8px 11px;border-radius:11px;color:#5549ac;text-decoration:none;font-weight:800;background:#f4f1ff">章节练习</a></nav><div class="top-actions"><span class="privacy-pill">离线运行 · 仅保存在本设备</span>' +
             (i.startedAt && !i.submitted
               ? '<span id="timer-mini" class="timer-mini">' + R(J()) + "</span>"
               : "") +
@@ -5098,7 +5101,7 @@
                 "</span></div>"
               );
             }).join("") +
-            '<div class="hero-card"><span>诊断后获得</span><b>章节掌握度</b><small>含证据置信度与逐题讲解</small></div></div></section><section class="quick-stats"><article><b>40:00</b><span>主诊断时长</span><small>计时与进度自动保存</small></article><article><b>26</b><span>核心诊断任务</span><small>覆盖20个教材章节</small></article><article><b>12</b><span>动态图形场景</span><small>点击步骤逐层呈现</small></article><article><b>0</b><span>个人身份字段</span><small>不记录姓名、学校、性别</small></article></section><section class="learning-tools-callout"><div><span class="section-kicker">把诊断变成学习行动</span><h2>整理知识，也整理自己的学习过程</h2><p>用思维导图连接章节与方法；用 ORID 区分事实、感受、认识和下一步行动。两个作品都会自动保存，并可独立导出PDF。</p></div><div><button data-action="mindmap"><b>⌘</b><span><strong>制作思维导图</strong><small>编辑分支 · 报告生成 · PDF</small></span><i>→</i></button><button data-action="orid"><b>O</b><span><strong>填写ORID反思</strong><small>四步引导 · 自动保存 · PDF</small></span><i>→</i></button></div></section><section class="section-block"><div class="section-heading"><div><span>诊断蓝图</span><h2>从基础运算到数据推理</h2></div><p>使用“章节名称 + 知识点”双重映射，保证报告可读。</p></div><div class="domain-grid">' +
+            '<div class="hero-card"><span>诊断后获得</span><b>章节掌握度</b><small>含证据置信度与逐题讲解</small></div></div></section><section class="quick-stats"><article><b>40:00</b><span>主诊断时长</span><small>计时与进度自动保存</small></article><article><b>26</b><span>核心诊断任务</span><small>覆盖20个教材章节</small></article><article><b>14</b><span>第13·14章课时</span><small>追问、图解、即时练习</small></article><article><b>0</b><span>个人身份字段</span><small>不记录姓名、学校、性别</small></article></section><section class="learning-tools-callout"><div><span class="section-kicker">新增人教版八年级几何学习</span><h2>第13章三角形 · 第14章全等三角形</h2><p>按教材与教学设计完成14个课时；每课先做易错概念追问，再看动态图形、完成即时检测。课后练习包含基础、中等与提高题。</p><p><a href="math-learn.html" class="primary-button" style="display:inline-block;text-decoration:none;margin-right:10px">开始章节学习</a><a href="math-practice.html" class="ghost-button" style="display:inline-block;text-decoration:none">进入章节练习</a></p></div><div><button data-action="mindmap"><b>⌘</b><span><strong>制作思维导图</strong><small>课时证据自动同步 · PDF</small></span><i>→</i></button><button data-action="orid"><b>O</b><span><strong>填写ORID反思</strong><small>四步引导 · 自动保存 · PDF</small></span><i>→</i></button></div></section><section class="section-block"><div class="section-heading"><div><span>诊断蓝图</span><h2>从基础运算到数据推理</h2></div><p>使用“章节名称 + 知识点”双重映射，保证报告可读。</p></div><div class="domain-grid">' +
             t +
             '</div></section><section id="method" class="method-section"><div class="method-copy"><span class="section-kicker">真实可核验模式</span><h2>不制造“近三年正确率”</h2><p>公开资料没有稳定提供逐题、逐知识点正确率。因此只用北京中考公开试题结构与官方评析校准题型，学生掌握度完全由本次作答生成。</p></div><div class="method-steps"><div><b>01</b><span><strong>作答证据</strong>正确性、难度、知识点</span></div><div><b>02</b><span><strong>章节聚合</strong>显示题数与置信度</span></div><div><b>03</b><span><strong>大纲达成</strong>提供区间而非承诺分数</span></div><div><b>04</b><span><strong>补强路径</strong>先修复最关键知识链</span></div></div></section></div>'
           );
