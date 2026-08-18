@@ -18,6 +18,15 @@
   stroke-width: 5 !important;
 }
 
+.diagram .layer {
+  opacity: 0;
+}
+
+.diagram .layer.is-visible {
+  opacity: 1 !important;
+  transform: none;
+}
+
 .diagram .goal,
 .diagram .pinkline {
   fill: none !important;
@@ -31,12 +40,17 @@
 .diagram .tick {
   fill: none !important;
   stroke: #6552d7 !important;
+  stroke-width: 4.5px !important;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .diagram .arc,
 .diagram .mintline {
   fill: none !important;
   stroke: #168f7e !important;
+  stroke-width: 5px !important;
+  stroke-linecap: round;
 }
 
 .diagram .right {
@@ -47,15 +61,16 @@
 
 .diagram text {
   fill: #24234b;
+  font-weight: 850;
   paint-order: stroke;
-  stroke: rgba(255, 255, 255, 0.9);
-  stroke-width: 3px;
+  stroke: #ffffff;
+  stroke-width: 4px;
   stroke-linejoin: round;
 }
 
-.diagram .tag { fill: #4938a9; }
-.diagram .dg-title { fill: #565272; }
-.diagram .small { fill: #30296c; }
+.diagram .tag { fill: #4938a9; font-size: 16px; font-weight: 900; }
+.diagram .dg-title { fill: #565272; font-size: 17px; }
+.diagram .small { fill: #30296c; font-size: 16px; font-weight: 900; }
 
 @media (max-width: 820px) {
   .diagram { padding: 7px; }
