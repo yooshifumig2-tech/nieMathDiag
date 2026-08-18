@@ -1,5 +1,6 @@
 (function(){
   const printStyle=document.createElement("link");printStyle.rel="stylesheet";printStyle.href="assets/math-print.css";printStyle.media="print";document.head.append(printStyle);
+  const diagramStyle=document.createElement("link");diagramStyle.rel="stylesheet";diagramStyle.href="assets/math-diagram-contrast.css";document.head.append(diagramStyle);
   const KEY="fumi-math-course:v1", MAP_KEY="fumi-math-map:learning-tools:v1";
   const defaults={lesson:{},practice:{answers:{},submitted:{},step:{}},updatedAt:null};
   function fresh(){return JSON.parse(JSON.stringify(defaults))}
