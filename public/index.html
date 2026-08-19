@@ -3914,6 +3914,8 @@
             "#48a56a",
             "#a36f4f",
             "#5469b1",
+            "#4f7ee8",
+            "#ef6e9a",
           ],
           nt = {
             answers: {},
@@ -3984,17 +3986,22 @@
             var e = JSON.parse(a) || {},
               r = e.mindmap || {},
               n = Array.isArray(r.branches)
-                ? r.branches.slice(0, 10).map(function s(c, p) {
+                ? r.branches.slice(0, 10).map(function s(c, p, f) {
+                    var g =
+                      w.indexOf(c.color) >= 0
+                        ? c.color
+                        : w.indexOf(f) >= 0
+                          ? f
+                          : w[(Number(p) || 0) % w.length];
                     return {
                       id: String(c.id || "node-" + p).slice(0, 60),
                       title: String(c.title || "新分支").slice(0, 30),
                       note: String(c.note || "").slice(0, 120),
-                      color:
-                        w.indexOf(c.color) >= 0 ? c.color : w[p % w.length],
+                      color: g,
                       autoSync: c.autoSync !== !1,
                       children: Array.isArray(c.children)
-                        ? c.children.slice(0, 12).map(function (f, g) {
-                            return s(f, p + "-" + g);
+                        ? c.children.slice(0, 48).map(function (l, u) {
+                            return s(l, u, g);
                           })
                         : [],
                     };
@@ -4650,89 +4657,160 @@
         }
         function G() {
           var t = v.mindmap,
-            a = t.branches,
+            a = Array.isArray(t.branches) ? t.branches : [],
             e = 600,
-            r = 360,
+            r = 460,
             n = "",
             d = "";
-          function s(p, f, g, l, u, x, at) {
-            var h = l ? 148 : 200,
-              mt = l ? 54 : 70,
-              vt = f - h / 2,
-              zt = g - mt / 2;
-            u != null &&
-              (n +=
-                '<path d="M ' +
-                u.toFixed(1) +
-                " " +
-                x.toFixed(1) +
-                " Q " +
-                ((u + f) / 2).toFixed(1) +
-                " " +
-                ((x + g) / 2 - 14).toFixed(1) +
-                " " +
-                f.toFixed(1) +
-                " " +
-                g.toFixed(1) +
-                '" fill="none" stroke="' +
-                p.color +
-                '" stroke-width="' +
-                (l ? 2 : 4) +
-                '" stroke-linecap="round" opacity=".58"></path>');
-            d +=
-              '<g class="map-branch-node"><rect x="' +
+          function s(p, f) {
+            return w.indexOf(p) >= 0 ? p : w.indexOf(f) >= 0 ? f : w[0];
+          }
+          function c(p, f, g, l, u, x, at, h, mt) {
+            var vt = p + at * f,
+              zt = l - at * u,
+              Et = (vt + zt) / 2;
+            n +=
+              '<path d="M ' +
               vt.toFixed(1) +
-              '" y="' +
+              " " +
+              g.toFixed(1) +
+              " C " +
+              Et.toFixed(1) +
+              " " +
+              g.toFixed(1) +
+              " " +
+              Et.toFixed(1) +
+              " " +
+              x.toFixed(1) +
+              " " +
               zt.toFixed(1) +
+              " " +
+              x.toFixed(1) +
+              '" fill="none" stroke="' +
+              h +
+              '" stroke-width="' +
+              mt +
+              '" stroke-linecap="round" opacity=".5"></path>';
+          }
+          function p(f, g, l, u, x, at) {
+            var h = [170, 148, 116][u],
+              mt = [62, 42, 30][u],
+              vt = [15, 12, 10.5][u],
+              zt = s(f.color, at),
+              Et = l - h / 2,
+              Ct = x - mt / 2,
+              At =
+                u === 0
+                  ? Y(f.note, 20)
+                  : u === 1 && !g
+                    ? Y(f.note, 17)
+                    : "",
+              Ot = u === 2 ? (f.children || []).length : g;
+            d +=
+              '<g class="map-branch-node map-depth-' +
+              u +
+              '"><rect x="' +
+              Et.toFixed(1) +
+              '" y="' +
+              Ct.toFixed(1) +
               '" width="' +
               h +
               '" height="' +
               mt +
               '" rx="' +
-              (l ? 13 : 18) +
+              [16, 12, 9][u] +
               '" fill="#fff" stroke="' +
-              p.color +
+              zt +
               '" stroke-width="' +
-              (l ? 1.8 : 2.5) +
+              [2.4, 1.8, 1.4][u] +
               '"></rect><circle cx="' +
-              (vt + 16).toFixed(1) +
+              (Et + (u === 2 ? 10 : 13)).toFixed(1) +
               '" cy="' +
-              (zt + 17).toFixed(1) +
-              '" r="5" fill="' +
-              p.color +
+              (Ct + (u === 2 ? 10 : 13)).toFixed(1) +
+              '" r="' +
+              (u === 2 ? 3.5 : 4.5) +
+              '" fill="' +
+              zt +
               '"></circle><text x="' +
-              f.toFixed(1) +
+              l.toFixed(1) +
               '" y="' +
-              (g - (l ? 4 : 6)).toFixed(1) +
+              (x + (u === 0 ? -10 : u === 1 ? -5 : Ot ? -4 : 4)).toFixed(1) +
               '" text-anchor="middle" font-size="' +
-              (l ? 12 : 16) +
+              vt +
               '" font-weight="800" fill="#2c2940">' +
-              o(Y(p.title, l ? 13 : 16)) +
-              '</text><text x="' +
-              f.toFixed(1) +
-              '" y="' +
-              (g + (l ? 13 : 18)).toFixed(1) +
-              '" text-anchor="middle" font-size="10" fill="#77738b">' +
-              o(Y(p.note, l ? 19 : 25)) +
-              "</text></g>";
+              o(Y(f.title, u === 0 ? 15 : u === 1 ? 13 : 10)) +
+              "</text>";
+            u < 2 &&
+              At &&
+              (d +=
+                '<text x="' +
+                l.toFixed(1) +
+                '" y="' +
+                (x + (u === 0 ? 8 : 11)).toFixed(1) +
+                '" text-anchor="middle" font-size="' +
+                (u === 0 ? 9.5 : 8.5) +
+                '" fill="#77738b">' +
+                o(At) +
+                "</text>");
+            Ot > 0 &&
+              (d +=
+                '<text x="' +
+                l.toFixed(1) +
+                '" y="' +
+                (x + (u === 0 ? 24 : u === 1 ? 12 : 10)).toFixed(1) +
+                '" text-anchor="middle" font-size="' +
+                (u === 2 ? 7.5 : 8.5) +
+                '" font-weight="800" fill="' +
+                zt +
+                '">＋' +
+                Ot +
+                "个子分支</text>");
+            d += "</g>";
+            return zt;
           }
-          a.forEach(function (p, f) {
-            var g = -Math.PI / 2 + (f * Math.PI * 2) / Math.max(a.length, 1),
-              l = e + Math.cos(g) * 265,
-              u = r + Math.sin(g) * 220;
-            s(p, l, u, !1, e, r);
-            (p.children || []).slice(0, 4).forEach(function (x, at) {
-              var h = at - (Math.min((p.children || []).length, 4) - 1) / 2,
-                mt = l + Math.cos(g) * 165 + Math.sin(g) * h * 72,
-                vt = u + Math.sin(g) * 120 - Math.cos(g) * h * 58;
-              s(x, mt, vt, !0, l, u);
+          function f(g, l, u, x) {
+            var at = x < 0 ? 400 : 800,
+              h = x < 0 ? 210 : 990,
+              mt = x < 0 ? 65 : 1135,
+              vt = Array.isArray(g.children) ? g.children : [],
+              zt = vt.slice(0, 3),
+              Et = Math.max(0, vt.length - zt.length),
+              Ct = Math.min(72, Math.max(48, (l - 42) / 2)),
+              At = p(g, Et, at, 0, u, w[x < 0 ? 0 : 4]);
+            c(e, 110, r, at, 85, u, x, At, 3.6);
+            zt.forEach(function (Ot, Tt) {
+              var Pt = u + (Tt - (zt.length - 1) / 2) * Ct,
+                Nt = s(Ot.color, At),
+                Lt = Array.isArray(Ot.children) ? Ot.children : [],
+                Ft = zt.length <= 2 ? 2 : 1,
+                Rt = Lt.slice(0, Ft),
+                It = Math.max(0, Lt.length - Rt.length);
+              c(at, 85, u, h, 74, Pt, x, Nt, 2.3);
+              p(Ot, It, h, 1, Pt, At);
+              Rt.forEach(function (Jt, Vt) {
+                var Ht = Pt + (Vt - (Rt.length - 1) / 2) * 32,
+                  Wt = s(Jt.color, Nt);
+                c(h, 74, Pt, mt, 58, Ht, x, Wt, 1.6);
+                p(Jt, 0, mt, 2, Ht, Nt);
+              });
             });
+          }
+          var g = Math.ceil(a.length / 2),
+            l = Math.max(1, g),
+            u = Math.max(1, a.length - g);
+          a.forEach(function (x, at) {
+            var h = at < g ? -1 : 1,
+              mt = at < g ? at : at - g,
+              vt = h < 0 ? l : u,
+              zt = 780 / vt,
+              Et = 70 + (mt + 0.5) * zt;
+            f(x, zt, Et, h);
           });
           return (
-            '<svg class="student-mindmap-svg" viewBox="0 0 1200 720" role="img" aria-label="支持多级分支的学生数学思维导图"><defs><filter id="mapShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#392d79" flood-opacity=".16"/></filter><linearGradient id="centerGradient" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6d5ce7"/><stop offset="1" stop-color="#4634b2"/></linearGradient></defs><rect width="1200" height="720" rx="28" fill="#faf9ff"></rect><circle cx="600" cy="360" r="268" fill="none" stroke="#ece8fc" stroke-width="1.5" stroke-dasharray="6 10"></circle>' +
+            '<svg class="student-mindmap-svg" viewBox="0 0 1200 920" role="img" aria-label="支持三级分支与更深层数量提示的学生数学思维导图"><defs><filter id="mapShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#392d79" flood-opacity=".16"/></filter><linearGradient id="centerGradient" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6d5ce7"/><stop offset="1" stop-color="#4634b2"/></linearGradient></defs><rect width="1200" height="920" rx="28" fill="#faf9ff"></rect><path d="M600 52V868" stroke="#eeebfb" stroke-width="1" stroke-dasharray="5 9"></path><text x="600" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#8a849d">三级结构预览 · 更深内容用“＋N个子分支”标记</text>' +
             n +
             d +
-            '<g filter="url(#mapShadow)"><rect x="475" y="308" width="250" height="104" rx="28" fill="url(#centerGradient)"></rect><text x="600" y="353" text-anchor="middle" font-size="11" font-weight="700" fill="#dcd7ff" letter-spacing="2">中心主题</text><text x="600" y="384" text-anchor="middle" font-size="20" font-weight="800" fill="#fff">' +
+            '<g filter="url(#mapShadow)"><rect x="490" y="410" width="220" height="100" rx="27" fill="url(#centerGradient)"></rect><text x="600" y="451" text-anchor="middle" font-size="11" font-weight="700" fill="#dcd7ff" letter-spacing="2">中心主题</text><text x="600" y="482" text-anchor="middle" font-size="19" font-weight="800" fill="#fff">' +
             o(Y(t.center, 16)) +
             "</text></g></svg>"
           );
@@ -5800,22 +5878,31 @@
                 note: "写下知识点或方法",
                 color: w[c % w.length],
                 children: [],
+                autoSync: !1,
               }),
                 k(),
                 h());
             } else if (e === "add-map-child") {
               var x = findMapNode(v.mindmap.branches, a.dataset.mapId);
-              x &&
-                x.children.length < 6 &&
+              if (x) {
+                var at = x.children.filter(function (h) {
+                  return String(h.id || "").indexOf("node-") === 0;
+                }).length;
+                if (at >= 18) {
+                  alert("这个分支已添加18个自定义子分支。请先整理或删除不再需要的分支。");
+                  return;
+                }
                 (x.children.push({
                   id: htId(),
                   title: "新子分支",
                   note: "补充概念、证据或做法",
                   color: x.color,
                   children: [],
+                  autoSync: !1,
                 }),
                 k(),
                 h());
+              }
             } else if (e === "remove-map-node")
               (removeMapNode(v.mindmap.branches, a.dataset.mapId), k(), h());
             else if (e === "map-from-report") bt();
@@ -5919,5 +6006,6 @@
           Tt());
       })();
     </script>
+    <script src="assets/math-home-upgrade.js"></script>
   </body>
 </html>

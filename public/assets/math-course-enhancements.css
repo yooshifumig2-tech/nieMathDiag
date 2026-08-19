@@ -1,0 +1,181 @@
+.chapter-tabs {
+  flex-wrap: wrap;
+}
+
+.choice.selected,
+.choice[aria-pressed="true"]:not(.correct):not(.wrong) {
+  border-color: var(--purple);
+  background: #eeeaff;
+  color: var(--purple2);
+  box-shadow: 0 0 0 3px rgba(108, 85, 223, 0.18);
+  transform: translateY(-1px);
+}
+
+.choice.selected b,
+.choice[aria-pressed="true"]:not(.correct):not(.wrong) b {
+  color: var(--purple2);
+}
+
+.choice:focus-visible,
+.button:focus-visible,
+.chapter-tabs button:focus-visible,
+.practice-filter button:focus-visible,
+.step-row button:focus-visible,
+.pagination button:focus-visible {
+  outline: 3px solid rgba(79, 126, 232, 0.48);
+  outline-offset: 3px;
+}
+
+.choice:disabled {
+  cursor: default;
+}
+
+/* 未到当前步骤的图层完全隐藏，避免后续结论以浅色提前出现。 */
+.diagram .layer {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.diagram .layer.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.meter span,
+.meter em {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.meter em {
+  color: var(--purple2);
+  font-style: normal;
+  font-weight: 800;
+}
+
+.report-summary {
+  margin-top: 18px;
+  padding: 17px 19px;
+  border-radius: 18px;
+  background: var(--pale);
+}
+
+.report-summary p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.footer-actions {
+  flex-wrap: wrap;
+}
+
+.ai-toggle {
+  right: max(14px, env(safe-area-inset-right, 0px));
+  bottom: max(14px, env(safe-area-inset-bottom, 0px));
+}
+
+.ai-panel {
+  right: max(14px, env(safe-area-inset-right, 0px));
+  bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+  height: min(520px, calc(100vh - 112px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+  height: min(520px, calc(100dvh - 112px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+  max-height: calc(100dvh - 112px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+}
+
+.ai-messages {
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+.ai-form {
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.pagination span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+@media (max-width: 980px) {
+  .course-top {
+    gap: 12px;
+  }
+
+  .course-nav a {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 620px) {
+  .course-top {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .course-nav {
+    order: 3;
+    width: 100%;
+  }
+
+  .chapter-tabs button,
+  .practice-filter button {
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+  }
+
+  .pagination span {
+    order: -1;
+    width: 100%;
+    text-align: center;
+  }
+
+  .ai-panel {
+    left: max(10px, env(safe-area-inset-left, 0px));
+    right: max(10px, env(safe-area-inset-right, 0px));
+    width: auto;
+  }
+}
+
+@media (max-height: 680px) {
+  .ai-panel {
+    top: calc(8px + env(safe-area-inset-top, 0px));
+    bottom: auto;
+    height: calc(100vh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: none;
+  }
+}
+
+@media print {
+  .report-summary {
+    border: 1px solid #aaa;
+    background: #fff;
+  }
+
+  .pagination {
+    display: none;
+  }
+}
