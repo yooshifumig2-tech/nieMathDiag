@@ -6,9 +6,11 @@
     { key: "13", name: "第13章 三角形", short: "第13章" },
     { key: "14", name: "第14章 全等三角形", short: "第14章" },
     { key: "15", name: "第15章 轴对称", short: "第15章" },
-    { key: "16", name: "第16章 整式的乘法", short: "第16章" }
+    { key: "16", name: "第16章 整式的乘法", short: "第16章" },
+    { key: "17", name: "第17章 因式分解", short: "第17章" },
+    { key: "18", name: "第18章 分式", short: "第18章" }
   ];
-  const hashKey = () => (location.hash.replace("#", "").match(/13|14|15|16/) || ["13"])[0];
+  const hashKey = () => (location.hash.replace("#", "").match(/13|14|15|16|17|18/) || ["13"])[0];
   let chapter = (chapters.find((item) => item.key === hashKey()) || chapters[0]).name;
   let current = (D.find((item) => item.chapter === chapter) || D[0]).id;
   const steps = {};
@@ -58,7 +60,7 @@
     const step = steps[lesson.id] || 1;
     const currentConfig = chapters.find((item) => item.name === chapter) || chapters[0];
     const instantCount = D.reduce((sum, item) => sum + item.checks.length, 0);
-    app.innerHTML = `<section class="hero"><div><span class="kicker" style="color:#d9d3ff">人教版八年级上册 · 教学设计驱动</span><h1>第13—16章<br>数学学习工坊</h1><p>按“观察—追问—形成概念—即时检测—逐步图解”推进。学习证据会同步到思维导图，且不记录姓名、学校或性别。</p></div><div class="hero-stats"><span><b>${D.length}</b>个教学课时</span><span><b>${instantCount}</b>道即时题</span><span><b>${progress()}%</b>${currentConfig.short}进度</span><span><b>本地</b>自动保存</span></div></section>
+    app.innerHTML = `<section class="hero"><div><span class="kicker" style="color:#d9d3ff">人教版八年级上册 · 教学设计驱动</span><h1>第13—18章<br>数学学习工坊</h1><p>按“观察—追问—形成概念—即时检测—逐步图解”推进。学习证据会同步到思维导图，且不记录姓名、学校或性别。</p></div><div class="hero-stats"><span><b>${D.length}</b>个教学课时</span><span><b>${instantCount}</b>道即时题</span><span><b>${progress()}%</b>${currentConfig.short}进度</span><span><b>本地</b>自动保存</span></div></section>
       <div class="chapter-tabs">${chapters.map((item) => `<button data-chapter="${item.name}" data-key="${item.key}" class="${chapter === item.name ? "active" : ""}">${item.name}</button>`).join("")}</div>
       <div class="layout"><aside class="side">${lessons().map((item, index) => `<button data-lesson="${item.id}" class="${item.id === current ? "active" : ""} ${isLessonComplete(item) ? "done" : ""}"><small>课时 ${index + 1} · ${item.section}</small><b>${item.title}</b></button>`).join("")}</aside><article class="lesson">
       <section class="card lesson-head"><div><span class="kicker">${lesson.chapter} · ${lesson.section}</span><h2>${lesson.title}</h2><ul class="objectives">${lesson.objectives.map((item) => `<li>${item}</li>`).join("")}</ul></div><div><b>建议 ${lesson.minutes} 分钟</b><div class="progressbar"><i style="width:${progress()}%"></i></div></div></section>

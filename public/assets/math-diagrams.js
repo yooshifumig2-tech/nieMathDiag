@@ -226,20 +226,96 @@
     if (!body) return "";
     return base("章末提高题条件图", body);
   }
+  function algebra1718(type, step) {
+    const flows = {
+      "factorization-direction": ["多项式：和或差", "识别公因式、平方差或完全平方", "写成几个整式的乘积", "展开乘积，必须回到原多项式"],
+      "common-factor": ["逐项比较系数与字母", "取系数最大公因数、字母最低次数", "每一项分别除以公因式", "公因式 × 括号内多项式"],
+      "common-factor-advanced": ["先找最大公因式", "相同括号可作为一个整体", "首项为负时可连同负号提出", "展开检查系数、指数与正负号"],
+      "factor-difference": ["A²−B²", "两项、异号、都能写成平方", "分别确定平方底数 A 与 B", "A²−B²=(A+B)(A−B)"],
+      "factor-perfect": ["A²±2AB+B²", "首尾两项分别是 A²、B²", "核验中间项恰为 ±2AB", "A²±2AB+B²=(A±B)²"],
+      "factor-strategy": ["观察待分解的多项式", "一提：先提公因式", "二套：再用平方差或完全平方", "三查：每个因式都不能继续分解"],
+      "factor-grouping": ["ax+ay+bx+by", "分组：a(x+y)+b(x+y)", "两组出现共同整体 x+y", "结果：(a+b)(x+y)"],
+      "factor-parameter": ["含参数多项式 = 已知因式 × 另一因式", "先用常数项确定另一因式", "展开并比较同次项系数", "解出参数后再乘开检验"],
+      "factor-application": ["两个平方的和等于0", "每个平方都不小于0", "和为0 ⇒ 每个平方分别为0", "得到相等关系，再代入其余条件"],
+      "rational-definition": ["分式 A/B", "A、B都是整式，且B中含字母", "有意义：B≠0", "值为0：A=0，同时B≠0"],
+      "rational-property": ["分式 A/B", "分子、分母同乘或同除整式C", "必要条件：C≠0，并保留B≠0", "变形前后分式的值不变"],
+      "rational-reduction": ["先分解分子和分母", "找分子、分母的公因式", "只约因式，不能跨加减号约项", "写最简结果并保留原取值限制"],
+      "rational-product": ["A/B · C/D", "先因式分解并交叉约分", "分子相乘、分母相乘", "化为最简分式；B≠0且D≠0"],
+      "rational-division": ["A/B ÷ C/D", "除以分式改为乘其倒数", "A/B · D/C", "约分化简；除式还必须不等于0"],
+      "rational-addition": ["异分母分式相加减", "确定最简公分母并通分", "分母不变，分子整体相加减", "合并、约分并保留取值限制"],
+      "rational-mixed": ["分式混合运算", "有括号先括号，再乘方", "再乘除，最后加减；同级从左到右", "因式分解、约分并检查限制条件"],
+      "rational-model": ["总路程设为2s", "总时间=s/a+s/b", "平均速度=总路程÷总时间", "平均速度=2ab/(a+b)"],
+      "negative-exponent": ["a⁻ⁿ（n为正整数）", "负指数表示取倒数", "a⁻ⁿ=1/aⁿ，且a≠0", "最后按题意化为正整数指数形式"],
+      "scientific-notation-small": ["0＜|N|＜1", "小数点右移到首位非零数字之后", "移动n位就乘10⁻ⁿ", "N=a×10⁻ⁿ，且1≤|a|＜10"],
+      "rational-equation": ["先写出所有分母不为0的条件", "两边同乘最简公分母，化为整式方程", "解整式方程", "代回原分母检验，排除增根"],
+      "rational-word-problem": ["读题并设未知量，写明单位", "用路程、时间、效率等关系列分式方程", "去分母求候选解", "检验分母与实际意义，完整作答"],
+      "rational-sign": ["标出分子、分母为0的临界点", "分区间判断分子与分母符号", "同号为正，异号为负", "分子零点可取；分母零点必须排除"],
+      "rational-integer": ["把分子拆成分母的倍数加常数", "(x+3)/(x−1)=1+4/(x−1)", "要为整数，x−1必须整除4", "还要排除x=1"],
+      "rational-parameter": ["去分母得到含参数的整式方程", "解出x关于参数的表达式", "把正数等实际条件转成参数范围", "排除使原分母为0的参数值"],
+      "zero-exponent": ["先辨认括号确定底数", "(−3)⁰=1", "−(3⁰)=−1", "1+(−1)=0；零指数底数不能为0"],
+      "coefficient-independent": ["展开含参数的整式", "合并同类项并按x的次数排列", "与x无关 ⇒ x项系数为0", "列系数方程求参数，再代回检查"]
+    };
+    const flow = flows[type];
+    if (!flow) return "";
+    const ys = [34, 112, 190, 268];
+    const fills = ["#ffffff", "#eef3ff", "#f2efff", "#eafaf6"];
+    const body = flow.map((text, index) => {
+      const n = index + 1;
+      const y = ys[index];
+      const arrow = index ? `<path d="M310 ${y - 18}V${y - 5}" fill="none" stroke="${C.purple}" stroke-width="4" marker-end="url(#arr)"/>` : "";
+      return `<g ${show(n,step)}>${arrow}<rect x="48" y="${y}" width="524" height="58" rx="16" fill="${fills[index]}" stroke="${index === 3 ? C.mint : C.ink}" stroke-width="3"/><circle cx="78" cy="${y + 29}" r="17" fill="${index === 3 ? C.mint : C.purple}"/><text x="78" y="${y + 35}" text-anchor="middle" fill="#fff" style="fill:#fff;font-weight:900">${n}</text><text x="310" y="${y + 36}" text-anchor="middle" class="small">${text}</text></g>`;
+    }).join("");
+    return base("第17、18章代数分步图", body);
+  }
+  function review1516Specific(id, step) {
+    let body = "";
+    if (id === "review-15-01") body = `<g ${show(1,step)}><rect x="36" y="45" width="250" height="82" rx="16" fill="#eef3ff" stroke="${C.ink}" stroke-width="3"/><text x="161" y="78" text-anchor="middle">轴对称图形</text><text x="161" y="108" text-anchor="middle" class="tag">研究一个图形自身</text><rect x="334" y="45" width="250" height="82" rx="16" fill="#f2efff" stroke="${C.ink}" stroke-width="3"/><text x="459" y="78" text-anchor="middle">两个图形成轴对称</text><text x="459" y="108" text-anchor="middle" class="tag">研究两个图形的位置关系</text></g><g ${show(2,step)}><path d="M161 140V202M459 140V202" class="measure" marker-end="url(#arr)"/><text x="161" y="178" text-anchor="middle" class="small">沿某直线折叠</text><text x="459" y="178" text-anchor="middle" class="small">沿某直线折叠</text></g><g ${show(3,step)}><rect x="54" y="210" width="214" height="54" rx="14" class="note"/><text x="161" y="243" text-anchor="middle" class="small">自身两部分重合</text><rect x="352" y="210" width="214" height="54" rx="14" class="note"/><text x="459" y="243" text-anchor="middle" class="small">一个图形与另一个重合</text></g><g ${show(4,step)}><text x="310" y="329" text-anchor="middle" class="small">全等只说明形状、大小相同，不能单独保证轴对称位置</text></g>`;
+    if (id === "review-15-02") body = `<g ${show(1,step)}><path d="M55 180H565M310 28V332" class="main"/><text x="566" y="169">x</text><text x="322" y="38">y</text><text x="289" y="204">O</text><circle cx="150" cy="75" r="8" fill="${C.pink}"/><text x="62" y="66" class="tag">P(−4, 3)</text></g><g ${show(2,step)}><path d="M150 75V285" class="measure"/><path d="M138 168v12h12" class="right"/><text x="168" y="152" class="small">垂直于x轴</text></g><g ${show(3,step)}><circle cx="150" cy="285" r="8" fill="${C.blue}"/><text x="48" y="311" class="tag">P′(−4, −3)</text><path d="M142 123h16M142 237h16" class="tick"/></g><g ${show(4,step)}><text x="310" y="339" text-anchor="middle" class="small">关于x轴：横坐标不变，纵坐标变为相反数</text></g>`;
+    if (id === "review-15-03") body = `<g ${show(1,step)}><path d="M45 180H575M310 25V335" class="main"/><text x="575" y="169">x</text><text x="322" y="35">y</text><circle cx="410" cy="305" r="8" fill="${C.pink}"/><text x="422" y="299" class="tag">P(2, −5)</text></g><g ${show(2,step)}><path d="M410 305V55" class="measure"/><circle cx="410" cy="55" r="8" fill="${C.blue}"/><text x="420" y="80" class="tag">P₁(2, 5)</text><text x="453" y="181" class="small">关于x轴</text></g><g ${show(3,step)}><path d="M410 55H210" class="measure"/><circle cx="210" cy="55" r="8" fill="${C.mint}"/><text x="84" y="80" class="tag">P₂(−2, 5)</text><text x="265" y="45" class="small">再关于y轴</text></g><g ${show(4,step)}><text x="310" y="339" text-anchor="middle" class="small">(2,−5) → (2,5) → (−2,5)</text></g>`;
+    if (id === "review-15-04") body = `<g ${show(1,step)}><path d="M105 270H515M310 40V325" class="main"/><text x="88" y="298">A</text><text x="522" y="298">B</text><text x="324" y="58" class="tag">AB的垂直平分线 l</text><circle cx="310" cy="82" r="8" fill="${C.pink}"/><text x="322" y="86">P</text></g><g ${show(2,step)}><path d="M298 258v12h12" class="right"/><circle cx="310" cy="270" r="5"/><text x="322" y="294">M</text><path d="M205 261v18M415 261v18" class="tick"/></g><g ${show(3,step)}><path d="M105 270L310 82L515 270" class="goal"/><path d="M206 169l12 12M402 181l12-12" class="tick"/></g><g ${show(4,step)}><text x="310" y="339" text-anchor="middle" class="small">P在线段AB的垂直平分线上 ⇒ PA=PB</text></g>`;
+    if (id === "review-15-05") body = `<g ${show(1,step)}><path d="M105 270H515" class="main"/><text x="88" y="298">A</text><text x="522" y="298">B</text><circle cx="310" cy="72" r="8" fill="${C.pink}"/><circle cx="310" cy="175" r="8" fill="${C.blue}"/><text x="323" y="76">M</text><text x="323" y="180">N</text></g><g ${show(2,step)}><path d="M105 270L310 72L515 270" class="measure"/><text x="136" y="134" class="tag">MA=MB</text></g><g ${show(3,step)}><path d="M105 270L310 175L515 270" class="goal"/><text x="393" y="215" class="tag">NA=NB</text></g><g ${show(4,step)}><path d="M310 38V325" class="main"/><path d="M298 258v12h12" class="right"/><text x="330" y="326" class="small">两个不同点M、N确定直线MN：它是AB的垂直平分线</text></g>`;
+    if (id === "review-15-06") body = `<g ${show(1,step)}><path d="M110 292L310 150L510 292Z" class="main"/><text x="302" y="140">A</text><text x="88" y="317">B</text><text x="518" y="317">C</text><path d="M202 227l14 11M418 227l-14 11" class="tick"/></g><g ${show(2,step)}><path d="M279 170A45 45 0 0 1 341 170" class="goal"/><text x="310" y="207" text-anchor="middle" class="tag">100°</text></g><g ${show(3,step)}><rect x="158" y="42" width="304" height="54" rx="14" class="note"/><text x="310" y="75" text-anchor="middle" class="small">两个底角的和=180°−100°=80°</text></g><g ${show(4,step)}><path d="M139 292A38 38 0 0 1 148 264M481 292A38 38 0 0 0 472 264" class="arc"/><text x="130" y="253" class="tag">40°</text><text x="457" y="253" class="tag">40°</text></g>`;
+    if (id === "review-15-07") body = `<g ${show(1,step)}><path d="M30 285L155 78L280 285ZM340 285L465 78L590 285Z" class="main"/><text x="155" y="50" text-anchor="middle">情况一</text><text x="465" y="50" text-anchor="middle">情况二</text></g><g ${show(2,step)}><path d="M132 110A37 37 0 0 1 178 110" class="goal"/><text x="155" y="142" text-anchor="middle" class="tag">顶角70°</text><text x="465" y="140" text-anchor="middle" class="small">70°作为底角</text></g><g ${show(3,step)}><path d="M371 285A34 34 0 0 1 378 260M559 285A34 34 0 0 0 552 260" class="goal"/><text x="370" y="249" class="tag">70°</text><text x="538" y="249" class="tag">70°</text></g><g ${show(4,step)}><text x="155" y="329" text-anchor="middle" class="small">顶角可能为70°</text><text x="465" y="329" text-anchor="middle" class="small">也可能为180°−140°=40°</text></g>`;
+    if (id === "review-15-08") body = `<g ${show(1,step)}><path d="M25 278L145 105L265 278ZM350 278L470 68L590 278Z" class="main"/><text x="145" y="45" text-anchor="middle">假设腰为4</text><text x="470" y="45" text-anchor="middle">假设腰为9</text></g><g ${show(2,step)}><text x="73" y="185" class="tag">4</text><text x="211" y="185" class="tag">4</text><text x="145" y="270" text-anchor="middle" class="tag">9</text><text x="390" y="180" class="tag">9</text><text x="544" y="180" class="tag">9</text><text x="470" y="270" text-anchor="middle" class="tag">4</text></g><g ${show(3,step)}><path d="M55 300H235" class="goal"/><text x="145" y="330" text-anchor="middle" class="small">4+4＜9，不成立</text></g><g ${show(4,step)}><path d="M385 300H555" class="measure"/><text x="470" y="330" text-anchor="middle" class="small">9+4＞9，周长=9+9+4=22</text></g>`;
+    if (id === "review-15-09") body = `<g ${show(1,step)}><path d="M105 292L310 52L515 292Z" class="main"/><path d="M202 166l14 12M418 166l-14 12" class="tick"/><text x="310" y="24" text-anchor="middle">等腰三角形中有一个角为60°</text></g><g ${show(2,step)}><text x="310" y="116" text-anchor="middle" class="small">无论60°是顶角还是底角</text></g><g ${show(3,step)}><path d="M284 84A38 38 0 0 1 336 84M135 292A36 36 0 0 1 144 265M485 292A36 36 0 0 0 476 265" class="goal"/><text x="310" y="126" text-anchor="middle" class="tag">60°</text><text x="135" y="253" class="tag">60°</text><text x="458" y="253" class="tag">60°</text></g><g ${show(4,step)}><path d="M310 283v18" class="tick"/><text x="310" y="339" text-anchor="middle" class="small">三个角均为60° ⇒ 三边相等 ⇒ 等边三角形</text></g>`;
+    if (id === "review-15-10") body = `<g ${show(1,step)}><path d="M105 292V55L525 292Z" class="main"/><path d="M105 270h22v22" class="right"/><text x="84" y="46">A</text><text x="533" y="317">B</text><text x="80" y="317">C</text></g><g ${show(2,step)}><path d="M105 94A39 39 0 0 1 129 87" class="arc"/><text x="140" y="103" class="tag">30°</text><text x="300" y="158" class="tag">斜边AB=14</text></g><g ${show(3,step)}><path d="M235 245L295 211" class="measure" marker-end="url(#arr)"/><text x="310" y="282" text-anchor="middle" class="tag">30°角所对直角边BC</text></g><g ${show(4,step)}><text x="310" y="339" text-anchor="middle" class="small">BC=½AB=½×14=7</text></g>`;
+    if (id === "review-15-11") return geometry1516("shortest-reflection", step);
+    if (id === "review-15-12") body = `<g ${show(1,step)}><path d="M105 292L310 52L515 292Z" class="main"/><path d="M202 166l14 12M418 166l-14 12" class="tick"/><text x="310" y="24" text-anchor="middle" class="tag">AB=AC</text></g><g ${show(2,step)}><path d="M310 52V292" class="goal"/><circle cx="310" cy="292" r="5"/><text x="322" y="316">D</text><path d="M205 283v18M415 283v18" class="tick"/><text x="426" y="270" text-anchor="middle" class="tag">BD=DC</text></g><g ${show(3,step)}><circle cx="310" cy="178" r="8" fill="${C.pink}"/><text x="323" y="180">P</text><path d="M310 178L105 292M310 178L515 292" class="measure"/></g><g ${show(4,step)}><path d="M298 280v12h12" class="right"/><text x="310" y="336" text-anchor="middle" class="small">AD是BC的垂直平分线，P∈AD ⇒ PB=PC</text></g>`;
+    if (id === "review-15-c1") body = `<g ${show(1,step)}><path d="M30 285L155 65L280 285ZM340 285L465 105L590 285Z" class="main"/><text x="155" y="38" text-anchor="middle">8作为腰</text><text x="465" y="78" text-anchor="middle">8作为底</text></g><g ${show(2,step)}><text x="82" y="180" class="tag">8</text><text x="217" y="180" class="tag">8</text><text x="155" y="276" text-anchor="middle" class="tag">4</text></g><g ${show(3,step)}><text x="390" y="200" class="tag">6</text><text x="538" y="200" class="tag">6</text><text x="465" y="276" text-anchor="middle" class="tag">8</text></g><g ${show(4,step)}><text x="155" y="329" text-anchor="middle" class="small">8、8、4：有效</text><text x="465" y="329" text-anchor="middle" class="small">6、6、8：有效</text></g>`;
+    if (id === "review-15-c2") body = `<g ${show(1,step)}><path d="M45 215H575M310 28V332" class="main"/><text x="575" y="204">x</text><text x="322" y="38">y</text><circle cx="210" cy="95" r="8" fill="${C.pink}"/><circle cx="510" cy="175" r="8" fill="${C.blue}"/><text x="104" y="85" class="tag">A(2, 3)</text><text x="456" y="161" class="tag">B(8, 1)</text></g><g ${show(2,step)}><circle cx="510" cy="255" r="8" fill="${C.mint}"/><text x="446" y="281" class="tag">B′(8, −1)</text><path d="M510 175V255" class="measure"/><text x="398" y="201" class="small">关于x轴对称</text></g><g ${show(3,step)}><path d="M210 95L510 255" class="goal"/><circle cx="435" cy="215" r="7" fill="${C.gold}"/><text x="444" y="237">P</text><text x="340" y="137" class="tag">横差6，纵差−4</text></g><g ${show(4,step)}><text x="310" y="330" text-anchor="middle" class="small">最小值=AB′=√(6²+4²)=√52=2√13</text></g>`;
+    if (id === "review-15-04") body = body.replace('M206 169l12 12M402 181l12-12', 'M201 164l12 12M207 158l12 12M401 176l12-12M407 182l12-12');
+    if (id === "review-15-05") body = body.replace('<text x="330" y="326" class="small">', '<text x="310" y="326" text-anchor="middle" class="small">');
+    if (id === "review-15-07") body = body
+      .replace('M30 285L155 78L280 285ZM340 285L465 78L590 285Z', 'M35 285L155 114L275 285ZM375 290L465 42L555 290Z')
+      .replace('</g><g class="layer', '<path d="M92 198l12 9M218 198l-12 9M419 164l12 5M511 164l-12 5" class="tick"/></g><g class="layer')
+      .replace('M132 110A37 37 0 0 1 178 110', 'M129 140A38 38 0 0 1 181 140')
+      .replace('y="142"', 'y="172"')
+      .replace('M371 285A34 34 0 0 1 378 260M559 285A34 34 0 0 0 552 260', 'M399 290A34 34 0 0 1 408 263M531 290A34 34 0 0 0 522 263')
+      .replace('x="370" y="249"', 'x="397" y="252"')
+      .replace('x="538" y="249"', 'x="510" y="252"');
+    if (id === "review-15-08") body = `<g ${show(1,step)}><path d="M40 276H270" class="main"/><circle cx="40" cy="276" r="6"/><circle cx="270" cy="276" r="6"/><text x="155" y="38" text-anchor="middle">假设腰为4、底为9</text><text x="24" y="306">A</text><text x="276" y="306">B</text></g><g ${show(2,step)}><path d="M40 276A112 112 0 0 1 145 180M270 276A112 112 0 0 0 165 180" class="compass"/><text x="62" y="174" class="tag">半径4</text><text x="210" y="174" class="tag">半径4</text><text x="155" y="267" text-anchor="middle" class="tag">AB=9</text><text x="155" y="214" text-anchor="middle" class="small">两弧不能相交：4+4＜9</text></g><g ${show(3,step)}><path d="M350 285L470 75L590 285Z" class="main"/><text x="392" y="178" class="tag">9</text><text x="539" y="178" class="tag">9</text><text x="470" y="276" text-anchor="middle" class="tag">4</text><text x="470" y="48" text-anchor="middle">腰为9、底为4</text></g><g ${show(4,step)}><path d="M388 303H552" class="measure"/><text x="470" y="333" text-anchor="middle" class="small">三边9、9、4成立，周长=22</text></g>`;
+    if (id === "review-15-12") body = body.replace('M202 166l14 12M418 166l-14 12', 'M198 162l14 12M204 156l14 12M422 162l-14 12M416 156l-14 12');
+    if (id === "review-15-c2") body = `<g ${show(1,step)}><path d="M45 215H575M110 28V332" class="main"/><text x="575" y="204">x</text><text x="122" y="38">y</text><text x="88" y="238">O</text><circle cx="190" cy="95" r="8" fill="${C.pink}"/><circle cx="430" cy="175" r="8" fill="${C.blue}"/><text x="126" y="82" class="tag">A(2, 3)</text><text x="438" y="163" class="tag">B(8, 1)</text></g><g ${show(2,step)}><circle cx="430" cy="255" r="8" fill="${C.mint}"/><text x="438" y="282" class="tag">B′(8, −1)</text><path d="M430 175V255" class="measure"/><text x="327" y="201" class="small">关于x轴对称</text></g><g ${show(3,step)}><path d="M190 95L430 255" class="goal"/><circle cx="370" cy="215" r="7" fill="${C.gold}"/><text x="378" y="238">P</text><text x="279" y="135" class="tag">横差6，纵差−4</text></g><g ${show(4,step)}><text x="310" y="330" text-anchor="middle" class="small">最小值=AB′=√(6²+4²)=√52=2√13</text></g>`;
+    if (!body) return "";
+    return base("第15章复习题专用分步图", body);
+  }
   function render(type, step = 4, questionId = "") {
-    const exact = specific(questionId, step) || specific1516(questionId, step) || challenge(questionId, step) || challenge1516(questionId, step);
+    const exact = review1516Specific(questionId, step) || specific(questionId, step) || specific1516(questionId, step) || challenge(questionId, step) || challenge1516(questionId, step);
     if (exact) return exact;
     const geometry = geometry1516(type, step);
     if (geometry) return geometry;
     const algebra = algebra1516(type, step);
     if (algebra) return algebra;
+    const algebraNew = algebra1718(type, step);
+    if (algebraNew) return algebraNew;
     const review = reviewDiagram(type, step);
     if (review) return review;
     if (["triangle-basic", "inequality", "cevians"].includes(type)) return triangle(type, step);
     if (["angle-sum", "right-triangle", "exterior-angle"].includes(type)) return angles(type, step);
     if (["congruence", "sas", "asa", "sss"].includes(type)) return congruence(type, step);
     if (type === "construction") return construction(step);
-    return right(type, step);
+    if (["hl", "bisector-property", "bisector-converse"].includes(type)) return right(type, step);
+    return "";
   }
   window.MathDiagrams = { render };
 })();
