@@ -1,5 +1,5 @@
 (function(){
-  let open=false,busy=false,history=[],context={page:"第13、14章学习",canReveal:false};
+  let open=false,busy=false,history=[],context={page:"第13—18章学习",canReveal:false};
   const el=document.createElement("div");el.innerHTML='<button class="ai-toggle" aria-label="打开FUMI AI">AI</button><aside class="ai-panel"><div class="ai-head"><b>FUMI AI 数学助教</b><button data-close style="border:0;background:none;color:white">×</button></div><div class="ai-messages"><div class="bubble">告诉我你卡在哪一步。我会先追问条件，不会在提交前直接公布答案。</div></div><form class="ai-form"><input maxlength="600" placeholder="例如：为什么这里用SAS？"><button>发送</button></form></aside>';document.body.append(el);
   const panel=el.querySelector(".ai-panel"),messages=el.querySelector(".ai-messages"),input=el.querySelector("input");
   function bubble(text,role="ai"){const b=document.createElement("div");b.className="bubble "+(role==="user"?"user":"");b.textContent=text;messages.append(b);messages.scrollTop=messages.scrollHeight}

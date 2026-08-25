@@ -11,6 +11,7 @@
   const KEY = "fumi-math-course:v1";
   const MAP_KEY = "fumi-math-map:learning-tools:v1";
   const REVIEW_CHAPTER = "第13·14章 复习练习";
+  const REVIEW_CHAPTER_15_16 = "第15·16章 复习练习";
   const COLORS = {
     purple: "#6d5ce7",
     pink: "#ef6b8f",
@@ -22,7 +23,9 @@
     { number: 13, name: "第13章 三角形", domain: "三角形与全等", rootId: "domain-3", color: COLORS.purple },
     { number: 14, name: "第14章 全等三角形", domain: "三角形与全等", rootId: "domain-3", color: COLORS.blue },
     { number: 15, name: "第15章 轴对称", domain: "对称与特殊图形", rootId: "domain-4", color: COLORS.teal },
-    { number: 16, name: "第16章 整式的乘法", domain: "代数变形", rootId: "domain-5", color: COLORS.violet }
+    { number: 16, name: "第16章 整式的乘法", domain: "代数变形", rootId: "domain-5", color: COLORS.violet },
+    { number: 17, name: "第17章 因式分解", domain: "代数变形", rootId: "domain-5", color: COLORS.pink },
+    { number: 18, name: "第18章 分式", domain: "数与式", rootId: "domain-0", color: COLORS.blue }
   ];
   const defaults = { lesson: {}, practice: { answers: {}, submitted: {}, step: {} }, updatedAt: null };
 
@@ -114,7 +117,8 @@
 
   function migrateStableNodeId(children, stableId, legacyId, title) {
     if (children.some((item) => item.id === stableId)) return;
-    const legacyPattern = /^math-review-(13|14)-point-\d+$/;
+    const sourceNumber = stableId.match(/^math-review-(\d+)-point-/)?.[1];
+    const legacyPattern = sourceNumber ? new RegExp(`^math-review-${sourceNumber}-point-\\d+$`) : /^$/;
     const legacy = children.find((item) => item.id === legacyId)
       || children.find((item) => legacyPattern.test(item.id) && item.title === title);
     if (legacy) legacy.id = stableId;
@@ -179,15 +183,13 @@
           color: chapter.color
         });
         chapterLessons.forEach((lesson) => syncLessonNode(chapterNode, lesson, chapter.color));
-        if (chapter.number === 15 || chapter.number === 16) {
-          syncChallengeNode(
-            chapterNode,
-            `math-challenge-${chapter.number}`,
-            "培优挑战（不计入必做掌握率）",
-            (item) => item.chapter === chapter.name,
-            chapter.color
-          );
-        }
+        syncChallengeNode(
+          chapterNode,
+          `math-challenge-${chapter.number}`,
+          "培优挑战（不计入必做掌握率）",
+          (item) => item.chapter === chapter.name,
+          chapter.color
+        );
         const lessonOrder = new Map(chapterLessons.map((lesson, index) => [`course-${lesson.id}`, index]));
         lessonOrder.set(`math-challenge-${chapter.number}`, chapterLessons.length);
         chapterNode.children.sort((a, b) => (lessonOrder.get(a.id) ?? 100) - (lessonOrder.get(b.id) ?? 100));
@@ -238,7 +240,66 @@
         }
       }
 
-      const priority = { "math-course-13": 0, "math-course-14": 1, "math-review-13-14": 2, "math-course-15": 0, "math-course-16": 0 };
+      const review1516Sources = [
+        { source: "第15章 轴对称", number: "15", rootId: "domain-4", domain: "对称与特殊图形", color: COLORS.teal },
+        { source: "第16章 整式的乘法", number: "16", rootId: "domain-5", domain: "代数变形", color: COLORS.violet }
+      ];
+      review1516Sources.forEach((sourceConfig) => {
+        const sourceQuestions = MathCourseData.practice.filter((item) => (
+          item.chapter === REVIEW_CHAPTER_15_16
+          && item.sourceChapter === sourceConfig.source
+          && item.required
+        ));
+        if (!sourceQuestions.length) return;
+        const root = mapData.mindmap.branches.find((item) => item.id === sourceConfig.rootId)
+          || mapData.mindmap.branches.find((item) => item.title === sourceConfig.domain);
+        if (!root) return;
+        root.children = Array.isArray(root.children) ? root.children : [];
+        const sourceStats = practiceStats((item) => (
+          item.chapter === REVIEW_CHAPTER_15_16
+          && item.sourceChapter === sourceConfig.source
+        ));
+        const sourceNode = ensureNode(root.children, `math-review-${sourceConfig.number}`, {
+          title: `第${sourceConfig.number}章复习练习`,
+          note: `必做 ${sourceStats.done}/${sourceStats.all} · 掌握 ${sourceStats.pct}%`,
+          color: sourceConfig.color
+        });
+        const points = [...new Set(sourceQuestions.map((item) => item.point))];
+        points.forEach((point, index) => {
+          const rows = sourceQuestions.filter((item) => item.point === point);
+          const answered = rows.filter((item) => state.practice.submitted[item.id]);
+          const correct = answered.filter((item) => state.practice.answers[item.id] === item.answer);
+          const pointId = `math-review-${sourceConfig.number}-point-${stableSlug(point)}`;
+          migrateStableNodeId(sourceNode.children, pointId, `math-review-${sourceConfig.number}-point-${index}`, point);
+          ensureNode(sourceNode.children, pointId, {
+            title: point,
+            note: answered.length ? `${correct.length}/${answered.length} 正确` : "待复习",
+            color: sourceConfig.color
+          });
+        });
+        syncChallengeNode(
+          sourceNode,
+          `math-review-${sourceConfig.number}-challenge`,
+          "培优挑战（不计入必做掌握率）",
+          (item) => item.chapter === REVIEW_CHAPTER_15_16 && item.sourceChapter === sourceConfig.source,
+          sourceConfig.color
+        );
+        const pointOrder = new Map(points.map((point, index) => [`math-review-${sourceConfig.number}-point-${stableSlug(point)}`, index]));
+        pointOrder.set(`math-review-${sourceConfig.number}-challenge`, points.length);
+        sourceNode.children.sort((a, b) => (pointOrder.get(a.id) ?? 100) - (pointOrder.get(b.id) ?? 100));
+      });
+
+      const priority = {
+        "math-course-18": 0,
+        "math-course-13": 0,
+        "math-course-14": 1,
+        "math-review-13-14": 2,
+        "math-course-15": 0,
+        "math-review-15": 1,
+        "math-course-16": 0,
+        "math-review-16": 1,
+        "math-course-17": 2
+      };
       mapData.mindmap.branches.forEach((branch) => {
         if (Array.isArray(branch.children)) branch.children.sort((a, b) => (priority[a.id] ?? 20) - (priority[b.id] ?? 20));
       });

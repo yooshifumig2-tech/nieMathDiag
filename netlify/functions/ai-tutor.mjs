@@ -8,6 +8,31 @@ const clean = (value, limit = 1600) =>
     .trim()
     .slice(0, limit);
 
+function plainMath(value, limit = 1600) {
+  return clean(value, limit)
+    .replace(/\$+/g, "")
+    .replace(/\\(?:\(|\)|\[|\])/g, "")
+    .replace(/\*\*/g, "")
+    .replace(/`+/g, "")
+    .replace(/\\(?:left|right)/g, "")
+    .replace(/\\(?:text|mathrm)\s*\{([^{}]*)\}/g, "$1")
+    .replace(/\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, "($1)/($2)")
+    .replace(/\\sqrt\s*\{([^{}]+)\}/g, "√($1)")
+    .replace(/\\times/g, "×")
+    .replace(/\\div/g, "÷")
+    .replace(/\\cdot/g, "·")
+    .replace(/\\neq/g, "≠")
+    .replace(/\\geqslant/g, "≥")
+    .replace(/\\leqslant/g, "≤")
+    .replace(/\\geq?/g, "≥")
+    .replace(/\\leq?/g, "≤")
+    .replace(/\\pm/g, "±")
+    .replace(/\\angle/g, "∠")
+    .replace(/\\triangle/g, "△")
+    .replace(/\\([A-Za-z]+)/g, "$1")
+    .replace(/[{}]/g, "");
+}
+
 function env(key) {
   return Netlify.env.get(key) || "";
 }
@@ -98,10 +123,10 @@ function normalize(raw, canReveal) {
   }
   const output = {
     reply:
-      clean(parsed?.reply, 1800) ||
+      plainMath(parsed?.reply, 1800) ||
       "我暂时没有形成可靠提示，请说明你卡在哪一步。",
-    misconception: clean(parsed?.misconception, 400),
-    nextAction: clean(parsed?.nextAction, 400),
+    misconception: plainMath(parsed?.misconception, 400),
+    nextAction: plainMath(parsed?.nextAction, 400),
     hintLevel: Math.max(
       0,
       Math.min(canReveal ? 3 : 1, Number(parsed?.hintLevel) || 0),
@@ -109,7 +134,7 @@ function normalize(raw, canReveal) {
     suggestedQuickReplies: Array.isArray(parsed?.suggestedQuickReplies)
       ? parsed.suggestedQuickReplies
           .slice(0, 4)
-          .map((value) => clean(value, 40))
+          .map((value) => plainMath(value, 40))
       : [],
   };
   if (
