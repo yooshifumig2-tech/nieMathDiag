@@ -12,6 +12,7 @@
   const MAP_KEY = "fumi-math-map:learning-tools:v1";
   const REVIEW_CHAPTER = "第13·14章 复习练习";
   const REVIEW_CHAPTER_15_16 = "第15·16章 复习练习";
+  const REVIEW_CHAPTER_17_18 = "第17·18章 复习练习";
   const COLORS = {
     purple: "#6d5ce7",
     pink: "#ef6b8f",
@@ -240,13 +241,15 @@
         }
       }
 
-      const review1516Sources = [
-        { source: "第15章 轴对称", number: "15", rootId: "domain-4", domain: "对称与特殊图形", color: COLORS.teal },
-        { source: "第16章 整式的乘法", number: "16", rootId: "domain-5", domain: "代数变形", color: COLORS.violet }
+      const reviewSources = [
+        { reviewChapter: REVIEW_CHAPTER_15_16, source: "第15章 轴对称", number: "15", rootId: "domain-4", domain: "对称与特殊图形", color: COLORS.teal },
+        { reviewChapter: REVIEW_CHAPTER_15_16, source: "第16章 整式的乘法", number: "16", rootId: "domain-5", domain: "代数变形", color: COLORS.violet },
+        { reviewChapter: REVIEW_CHAPTER_17_18, source: "第17章 因式分解", number: "17", rootId: "domain-5", domain: "代数变形", color: COLORS.pink },
+        { reviewChapter: REVIEW_CHAPTER_17_18, source: "第18章 分式", number: "18", rootId: "domain-0", domain: "数与式", color: COLORS.blue }
       ];
-      review1516Sources.forEach((sourceConfig) => {
+      reviewSources.forEach((sourceConfig) => {
         const sourceQuestions = MathCourseData.practice.filter((item) => (
-          item.chapter === REVIEW_CHAPTER_15_16
+          item.chapter === sourceConfig.reviewChapter
           && item.sourceChapter === sourceConfig.source
           && item.required
         ));
@@ -256,7 +259,7 @@
         if (!root) return;
         root.children = Array.isArray(root.children) ? root.children : [];
         const sourceStats = practiceStats((item) => (
-          item.chapter === REVIEW_CHAPTER_15_16
+          item.chapter === sourceConfig.reviewChapter
           && item.sourceChapter === sourceConfig.source
         ));
         const sourceNode = ensureNode(root.children, `math-review-${sourceConfig.number}`, {
@@ -281,7 +284,7 @@
           sourceNode,
           `math-review-${sourceConfig.number}-challenge`,
           "培优挑战（不计入必做掌握率）",
-          (item) => item.chapter === REVIEW_CHAPTER_15_16 && item.sourceChapter === sourceConfig.source,
+          (item) => item.chapter === sourceConfig.reviewChapter && item.sourceChapter === sourceConfig.source,
           sourceConfig.color
         );
         const pointOrder = new Map(points.map((point, index) => [`math-review-${sourceConfig.number}-point-${stableSlug(point)}`, index]));
@@ -291,6 +294,7 @@
 
       const priority = {
         "math-course-18": 0,
+        "math-review-18": 1,
         "math-course-13": 0,
         "math-course-14": 1,
         "math-review-13-14": 2,
@@ -298,7 +302,8 @@
         "math-review-15": 1,
         "math-course-16": 0,
         "math-review-16": 1,
-        "math-course-17": 2
+        "math-course-17": 2,
+        "math-review-17": 3
       };
       mapData.mindmap.branches.forEach((branch) => {
         if (Array.isArray(branch.children)) branch.children.sort((a, b) => (priority[a.id] ?? 20) - (priority[b.id] ?? 20));
