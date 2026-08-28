@@ -4,7 +4,8 @@
   const S = MathCore.state.practice;
   const REVIEW_1314 = "第13·14章 复习练习";
   const REVIEW_1516 = "第15·16章 复习练习";
-  const REVIEW_FILTERS = new Set([REVIEW_1314, REVIEW_1516]);
+  const REVIEW_1718 = "第17·18章 复习练习";
+  const REVIEW_FILTERS = new Set([REVIEW_1314, REVIEW_1516, REVIEW_1718]);
   const filters = [
     { key: "13", name: "第13章 三角形", label: "第13章" },
     { key: "14", name: "第14章 全等三角形", label: "第14章" },
@@ -13,7 +14,8 @@
     { key: "17", name: "第17章 因式分解", label: "第17章" },
     { key: "18", name: "第18章 分式", label: "第18章" },
     { key: "review", name: REVIEW_1314, label: "13·14复习" },
-    { key: "review15-16", name: REVIEW_1516, label: "15·16复习" }
+    { key: "review15-16", name: REVIEW_1516, label: "15·16复习" },
+    { key: "review17-18", name: REVIEW_1718, label: "17·18复习" }
   ];
   const PAGE_SIZE = 8;
   const givenSteps = {
@@ -34,6 +36,7 @@
   const hashKey = () => {
     const raw = location.hash.replace("#", "");
     if (raw.includes("review15-16")) return "review15-16";
+    if (raw.includes("review17-18")) return "review17-18";
     if (raw.includes("review")) return "review";
     return (raw.match(/13|14|15|16|17|18/) || ["13"])[0];
   };
@@ -177,7 +180,9 @@
       ? "第13·14章综合复习报告"
       : filter === REVIEW_1516
         ? "第15·16章综合复习报告"
-        : `${filter}练习报告`;
+        : filter === REVIEW_1718
+          ? "第17·18章综合复习报告"
+          : `${filter}练习报告`;
     return `<section class="hero"><div><span class="kicker" style="color:#d9d3ff">${isReview ? "复习讲义主线 · 独立记录" : "章节练习报告"}</span><h1>${title}</h1><p>掌握度只根据必做题中已经提交的题目计算；未作答不会被算作错误。培优题单独记录，不改变基础掌握率。</p></div><div class="hero-stats"><span><b>${currentStats.pct}%</b>必做掌握</span><span><b>${currentStats.done}/${currentStats.all}</b>必做进度</span><span><b>${challengeDone.length}/${challengeRows.length}</b>培优完成</span><span><b>${challengeRight.length}</b>培优答对</span></div></section>
       <section class="card" style="margin-top:22px"><span class="kicker">${isReview ? "按原章节查看证据" : "分知识点掌握度"}</span><div class="report-grid">${meterCards(rows, groupField)}</div>${isReview ? `<h3 style="margin-top:24px">分板块掌握度</h3><div class="report-grid">${meterCards(rows, "section")}</div>` : ""}<div class="report-summary"><b>当前建议</b><p>${masteryBand(currentStats.pct, currentStats.done, currentStats.all)}。完成全部必做题后再把此百分比作为阶段性掌握证据。</p></div><div class="footer-actions"><button class="button" onclick="print()">导出 / 保存PDF</button><a class="button" href="index.html?view=mindmap">查看同步后的思维导图</a><button class="button primary" data-view="questions">返回练习</button></div></section>`;
   }
@@ -187,9 +192,11 @@
     const chapterNav = document.querySelector?.('.course-nav a[href="math-practice.html"]');
     const review1314Nav = document.querySelector?.('.course-nav a[href="math-practice.html#review"]');
     const review1516Nav = document.querySelector?.('.course-nav a[href="math-practice.html#review15-16"]');
+    const review1718Nav = document.querySelector?.('.course-nav a[href="math-practice.html#review17-18"]');
     chapterNav?.classList.toggle("active", !isReview);
     review1314Nav?.classList.toggle("active", filter === REVIEW_1314);
     review1516Nav?.classList.toggle("active", filter === REVIEW_1516);
+    review1718Nav?.classList.toggle("active", filter === REVIEW_1718);
     if (view === "report") {
       app.innerHTML = report();
       return;
@@ -203,10 +210,16 @@
     const visibleRows = rows.slice(pageStart, pageStart + PAGE_SIZE);
     const requiredBefore = rows.slice(0, pageStart).filter((item) => item.required).length;
     const pagination = `<div class="pagination"><button class="button" data-page="${page - 1}" ${page === 0 ? "disabled" : ""}>← 上一组</button><span>第 ${page + 1} / ${totalPages} 组 · 每组最多${PAGE_SIZE}题</span><button class="button" data-page="${page + 1}" ${page === totalPages - 1 ? "disabled" : ""}>下一组 →</button></div>`;
-    const reviewHeading = filter === REVIEW_1516 ? "第15·16章<br>复习练习" : "第13·14章<br>复习练习";
-    const reviewCopy = filter === REVIEW_1516
-      ? "用24道必做题系统复盘轴对称与整式乘法，再用4道培优题完成综合迁移。"
-      : "用24道必做题系统复盘三角形与全等三角形，再用4道培优题完成综合迁移。";
+    const reviewHeading = filter === REVIEW_1718
+      ? "第17·18章<br>复习练习"
+      : filter === REVIEW_1516
+        ? "第15·16章<br>复习练习"
+        : "第13·14章<br>复习练习";
+    const reviewCopy = filter === REVIEW_1718
+      ? "用24道必做题系统复盘因式分解与分式，再用4道培优题完成方法综合和规律迁移。"
+      : filter === REVIEW_1516
+        ? "用24道必做题系统复盘轴对称与整式乘法，再用4道培优题完成综合迁移。"
+        : "用24道必做题系统复盘三角形与全等三角形，再用4道培优题完成综合迁移。";
     app.innerHTML = `<section class="hero"><div><span class="kicker" style="color:#d9d3ff">${isReview ? "以复习讲义为主 · 与原练习分别保存" : "基础 → 中等 → 提高"}</span><h1>${isReview ? reviewHeading : "第13—18章<br>分层练习"}</h1><p>${isReview ? reviewCopy : "每课时必做题覆盖教学流程，章末提高题用于综合迁移；提交后提供四步解析、动态图与AI追问。"}</p></div><div class="hero-stats"><span><b>${currentStats.done}/${currentStats.all}</b>必做进度</span><span><b>${currentStats.pct}%</b>已答掌握</span><span><b>${challenges}</b>培优挑战</span><span><b>逐题</b>图解与AI</span></div></section>
       <div class="practice-filter">${filters.map((item) => `<button data-filter="${item.name}" data-key="${item.key}" class="${filter === item.name ? "active" : ""}">${item.label}</button>`).join("")}<button data-view="report">查看掌握报告</button></div>
       ${pagination}<div class="practice-list">${(() => { let requiredIndex = requiredBefore; return visibleRows.map((item) => qcard(item, item.required ? requiredIndex++ : -1)).join(""); })()}</div>${pagination}<div class="footer-actions"><button class="button primary" data-view="report">生成${isReview ? "复习" : "章节"}报告</button></div>`;
