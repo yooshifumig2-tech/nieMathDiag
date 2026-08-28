@@ -47,16 +47,10 @@
       explain: "先提出公因式5a，得到5a(a²−9)；括号内仍是平方差，继续分成(a+3)(a−3)。只写到a²−9还没有分解彻底。", diagram: "factor-strategy"
     },
     {
-      id: "review-17-08", chapter, sourceChapter: "第17章 因式分解", section: "17.2 公式法与综合", point: "分解的彻底性", required: true, difficulty: "中等",
-      prompt: "12x³−3x彻底分解因式的结果是？",
-      options: ["3x(4x²−1)", "3x(2x−1)²", "x(12x²−3)", "3x(2x+1)(2x−1)"], answer: 3,
-      explain: "先提出3x得3x(4x²−1)，再把4x²−1看成(2x)²−1²，得到3x(2x+1)(2x−1)。", diagram: "factor-strategy"
-    },
-    {
       id: "review-17-09", chapter, sourceChapter: "第17章 因式分解", section: "拓展方法与应用", point: "十字相乘法", required: true, difficulty: "中等",
       prompt: "x²+x−12分解因式的结果是？",
       options: ["(x+6)(x−2)", "(x+4)(x−3)", "(x−4)(x+3)", "(x−6)(x+2)"], answer: 1,
-      explain: "寻找乘积为−12、和为1的两个数，得到4和−3。因此x²+x−12=(x+4)(x−3)。", diagram: "factor-parameter"
+      explain: "寻找乘积为−12、和为1的两个数，得到4和−3。因此x²+x−12=(x+4)(x−3)。", diagram: "factor-cross"
     },
     {
       id: "review-17-10", chapter, sourceChapter: "第17章 因式分解", section: "拓展方法与应用", point: "分组分解法", required: true, difficulty: "中等",
@@ -65,16 +59,10 @@
       explain: "前两项为a(x−y)，后两项为b(x−y)，两组出现共同整体(x−y)，再次提取后得到(a+b)(x−y)。", diagram: "factor-grouping"
     },
     {
-      id: "review-17-11", chapter, sourceChapter: "第17章 因式分解", section: "拓展方法与应用", point: "简便计算", required: true, difficulty: "中等",
-      prompt: "利用因式分解计算1003²−997²，结果是？",
-      options: ["6", "2000", "11964", "12000"], answer: 3,
-      explain: "使用平方差：1003²−997²=(1003+997)(1003−997)=2000×6=12000。", diagram: "factor-application"
-    },
-    {
-      id: "review-17-12", chapter, sourceChapter: "第17章 因式分解", section: "拓展方法与应用", point: "易错辨析", required: true, difficulty: "中等",
-      prompt: "小明把x²−9写成(x−3)²。对这一过程的判断正确的是？",
-      options: ["错误；(x−3)²=x²−6x+9，正确分解是(x−3)(x+3)", "正确；平方差等于差的平方", "错误；正确结果是(x−9)(x+1)", "正确；只要首尾能开平方即可"], answer: 0,
-      explain: "平方差公式得到的是两个共轭因式的乘积，不是差的平方。把(x−3)²展开会出现−6x这一中间项，不能还原x²−9。", diagram: "factor-difference"
+      id: "review-17-11", chapter, sourceChapter: "第17章 因式分解", section: "拓展方法与应用", point: "因式分解的代数应用", required: true, difficulty: "中等",
+      prompt: "已知x+y=7，x−y=5，则x³y−xy³的值是？",
+      options: ["70", "105", "175", "210"], answer: 3,
+      explain: "先把原式分解为xy(x²−y²)=xy(x−y)(x+y)。再由(x+y)²−(x−y)²=4xy求得xy=6，所以结果为6×5×7=210。", diagram: "factor-strategy"
     },
     {
       id: "review-17-c1", chapter, sourceChapter: "第17章 因式分解", section: "第17章培优", point: "因式与参数", required: false, difficulty: "提高",
@@ -116,7 +104,7 @@
       id: "review-18-05", chapter, sourceChapter: "第18章 分式", section: "18.1 概念与基本性质", point: "最简公分母", required: true, difficulty: "中等",
       prompt: "分式2/(3x²y)与5/(6xy³)的最简公分母是？",
       options: ["3x²y³", "6x²y³", "6x³y⁴", "18x²y³"], answer: 1,
-      explain: "系数3和6取最小公倍数6；字母x、y分别取分母中出现的最高次数x²和y³，所以最简公分母是6x²y³。", diagram: "rational-reduction"
+      explain: "系数3和6取最小公倍数6；字母x、y分别取分母中出现的最高次数x²和y³，所以最简公分母是6x²y³。", diagram: "rational-lcd"
     },
     {
       id: "review-18-06", chapter, sourceChapter: "第18章 分式", section: "18.2—18.3 分式运算", point: "异分母加减", required: true, difficulty: "中等",
@@ -137,10 +125,10 @@
       explain: "除以分式要乘其倒数。化为(6x²y)/(5ab)·(10a²b)/(9xy²)后约分，系数为4/3，字母部分为ax/y，得到4ax/(3y)。原式要求a、b、x、y均不为0。", diagram: "rational-division"
     },
     {
-      id: "review-18-09", chapter, sourceChapter: "第18章 分式", section: "18.4 整数指数幂", point: "负整数指数幂", required: true, difficulty: "基础",
-      prompt: "a³·a⁻⁵（a≠0）化成只含正整数指数的形式是？",
-      options: ["1/a", "1/a²", "a²", "−1/a²"], answer: 1,
-      explain: "同底数幂相乘，指数相加得到a⁻²；负指数表示倒数，所以a⁻²=1/a²。", diagram: "negative-exponent"
+      id: "review-18-09", chapter, sourceChapter: "第18章 分式", section: "18.4 整数指数幂", point: "零指数与负整数指数幂", required: true, difficulty: "基础",
+      prompt: "（−2）⁰+4⁻¹的值是？",
+      options: ["5", "5/4", "1/4", "−3/4"], answer: 1,
+      explain: "非零数的零次幂等于1，负一次幂表示取倒数。因此（−2）⁰=1，4⁻¹=1/4，两项相加得到5/4。", diagram: "integer-exponent-review"
     },
     {
       id: "review-18-10", chapter, sourceChapter: "第18章 分式", section: "18.4 整数指数幂", point: "小数的科学记数法", required: true, difficulty: "基础",
@@ -161,16 +149,30 @@
       explain: "设原单价为x元，则600/(x−10)−600/x=5。整理得x²−10x−1200=0，解得x=40或−30；单价应大于10且为正，所以原单价为40元。", diagram: "rational-word-problem"
     },
     {
+      id: "review-18-13", chapter, sourceChapter: "第18章 分式", section: "18.1 概念与基本性质", point: "分式的基本性质", required: true, difficulty: "基础",
+      prompt: "下列分式变形正确的是？（b、m均不为0）",
+      options: ["(a+m)/b=a/b", "a/b=a²/b²", "(a−m)/b=a/b", "a/b=am/(bm)"], answer: 3,
+      explain: "分式的分子、分母同时乘同一个非零整式，分式的值不变。因此a/b=am/(bm)；只给分子加减一项或把分子、分母分别平方，都不能保证值不变。",
+      diagram: "rational-property"
+    },
+    {
+      id: "review-18-14", chapter, sourceChapter: "第18章 分式", section: "18.2—18.3 分式运算", point: "分式乘方与混合运算", required: true, difficulty: "中等",
+      prompt: "[(2a)/(3b)]²÷[4a/(9b)]化简后的结果是？（a、b均不为0）",
+      options: ["a/b", "a²/b²", "b/a", "1"], answer: 0,
+      explain: "先把分子、分母分别平方，得到4a²/(9b²)；再把除法改成乘倒数，乘以9b/(4a)，约分后得到a/b。原式要求a、b均不为0。",
+      diagram: "rational-mixed"
+    },
+    {
       id: "review-18-c1", chapter, sourceChapter: "第18章 分式", section: "第18章培优", point: "增根与参数", required: false, difficulty: "提高",
-      prompt: "关于x的方程2/(x−3)=m/(x²−9)有增根x=3，则m等于？",
-      options: ["6", "9", "12", "18"], answer: 2,
-      explain: "去分母后得到2(x+3)=m。要使整式方程产生候选解x=3，应有m=2×6=12；但x=3使原分母为0，所以它正是增根。", diagram: "rational-equation"
+      prompt: "关于x的方程m/(x−1)+1=2/(x²−1)有增根x=1，则m等于？",
+      options: ["−1", "0", "1", "2"], answer: 2,
+      explain: "原方程要求x≠1且x≠−1。两边同乘(x−1)(x+1)，得到m(x+1)+x²−1=2。要使整式方程产生候选解x=1，应有2m=2，所以m=1；x=1使原分母为0，因此是增根。", diagram: "rational-equation"
     },
     {
       id: "review-18-c2", chapter, sourceChapter: "第18章 分式", section: "第18章培优", point: "分式规律与裂项", required: false, difficulty: "提高",
       prompt: "化简1/[x(x+1)]+1/[(x+1)(x+2)]+1/[(x+2)(x+3)]，结果是？",
       options: ["1/[x(x+3)]", "3/[x(x+3)]", "3/[(x+1)(x+2)]", "1/x−1/(x+2)"], answer: 1,
-      explain: "利用1/[t(t+1)]=1/t−1/(t+1)逐项裂分，中间项依次抵消，剩下1/x−1/(x+3)=3/[x(x+3)]。原式还要排除x=0、−1、−2、−3。", diagram: "rational-mixed"
+      explain: "利用1/[t(t+1)]=1/t−1/(t+1)逐项裂分，中间项依次抵消，剩下1/x−1/(x+3)=3/[x(x+3)]。原式还要排除x=0、−1、−2、−3。", diagram: "rational-telescoping"
     }
   ];
 
