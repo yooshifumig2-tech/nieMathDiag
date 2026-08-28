@@ -15,7 +15,8 @@
       let anchor = practice;
       [
         ["math-practice.html#review", "13·14复习"],
-        ["math-practice.html#review15-16", "15·16复习"]
+        ["math-practice.html#review15-16", "15·16复习"],
+        ["math-practice.html#review17-18", "17·18复习"]
       ].forEach(([href, label]) => {
         let review = nav.querySelector(`a[href='${href}']`);
         if (!review) {
@@ -43,14 +44,15 @@
       const kicker = callout.querySelector(".section-kicker");
       setText(kicker, "人教版八年级上册交互学习");
       const heading = callout.querySelector("h2");
-      setText(heading, "第13—18章系统学习 · 第13—16章复习练习");
+      setText(heading, "第13—18章系统学习 · 第13—18章复习练习");
       const copy = callout.querySelector("h2 + p");
-      setText(copy, "按教材与教学设计完成48个课时；每课先做易错概念追问，再看动态图、完成即时检测。第13、14章及第15、16章均设以复习讲义为主的独立复习练习。");
+      setText(copy, "按教材与教学设计完成48个课时；每课先做易错概念追问，再看动态图、完成即时检测。第13、14章、第15、16章及第17、18章均设以复习讲义为主的独立复习练习。");
       const actions = callout.querySelector("h2 + p + p");
       if (actions) {
         [
           ["math-practice.html#review", "13·14复习练习"],
-          ["math-practice.html#review15-16", "15·16复习练习"]
+          ["math-practice.html#review15-16", "15·16复习练习"],
+          ["math-practice.html#review17-18", "17·18复习练习"]
         ].forEach(([href, label]) => {
           if (actions.querySelector(`a[href='${href}']`)) return;
           const review = document.createElement("a");
