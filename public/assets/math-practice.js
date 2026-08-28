@@ -4,7 +4,8 @@
   const S = MathCore.state.practice;
   const REVIEW_1314 = "第13·14章 复习练习";
   const REVIEW_1516 = "第15·16章 复习练习";
-  const REVIEW_FILTERS = new Set([REVIEW_1314, REVIEW_1516]);
+  const REVIEW_1718 = "第17·18章 复习练习";
+  const REVIEW_FILTERS = new Set([REVIEW_1314, REVIEW_1516, REVIEW_1718]);
   const filters = [
     { key: "13", name: "第13章 三角形", label: "第13章" },
     { key: "14", name: "第14章 全等三角形", label: "第14章" },
@@ -13,7 +14,8 @@
     { key: "17", name: "第17章 因式分解", label: "第17章" },
     { key: "18", name: "第18章 分式", label: "第18章" },
     { key: "review", name: REVIEW_1314, label: "13·14复习" },
-    { key: "review15-16", name: REVIEW_1516, label: "15·16复习" }
+    { key: "review15-16", name: REVIEW_1516, label: "15·16复习" },
+    { key: "review17-18", name: REVIEW_1718, label: "17·18复习" }
   ];
   const PAGE_SIZE = 8;
   const givenSteps = {
@@ -34,6 +36,7 @@
   const hashKey = () => {
     const raw = location.hash.replace("#", "");
     if (raw.includes("review15-16")) return "review15-16";
+    if (raw.includes("review17-18")) return "review17-18";
     if (raw.includes("review")) return "review";
     return (raw.match(/13|14|15|16|17|18/) || ["13"])[0];
   };
@@ -84,16 +87,20 @@
       "factor-strategy": ["按“一提、二套、三查”处理：先提公因式，再看平方差或完全平方。", "检查每个多项式因式还能否继续分解，并用展开乘积逆向验算。"],
       "factor-grouping": ["按能产生相同括号的方式分组，每组先各自提出公因式。", "两组出现相同整体后再次提取；最后展开检查是否漏项或错号。"],
       "factor-parameter": ["把已知因式与另一个待定因式相乘，或代入该因式对应的零点。", "比较同次项系数求参数，再把结果代回原式验证。"],
+      "factor-cross": ["先找乘积等于常数项、和等于一次项系数的两个数，并同时核对符号。", "把二次三项式写成两个一次因式的乘积，最后乘开检查三项是否完全还原。"],
       "factor-application": ["先识别平方、平方差或非负式等结构，把条件转化为更直接的关系。", "用分解后的关系求值，并检查是否满足原条件与取值限制。"],
       "rational-definition": ["先看分母是否含字母；判断有意义时令原分母不等于0。", "判断分式值为0时要同时满足分子等于0、分母不等于0。"],
       "rational-property": ["只有分子、分母同时乘或除同一个非零整式，分式的值才不变。", "整理负号时把分子、分母视为整体，并保留原分母不为0的限制。"],
       "rational-reduction": ["先把分子、分母因式分解，再寻找整体公因式；不能跨越加减号约项。", "通分时取各因式的最高次幂组成最简公分母，并同步补乘分子。"],
+      "rational-lcd": ["先把每个分母分解，再让系数取最小公倍数、相同字母或因式取最高次数。", "组成最简公分母后逐项检查能否整除原分母，并保留所有原分母限制。"],
       "rational-product": ["先写出原式限制条件，再把分子、分母中的多项式因式分解。", "交叉约去公因式后相乘并整理成最简分式，不能约去加数。"],
       "rational-division": ["把除以一个分式改成乘它的倒数，并补充除式有意义且不为0。", "因式分解、约分后再相乘；乘方时分子、分母必须分别乘方。"],
       "rational-addition": ["同分母时分母不变、分子相加减；减式的整个分子要加括号。", "异分母先找最简公分母并通分，合并分子后还要约分。"],
       "rational-mixed": ["先辨认括号和分数线的层级，按先乘方、再乘除、后加减计算。", "每次除法先乘倒数，最终化到最简并保留原式全部限制条件。"],
+      "rational-telescoping": ["把每一项裂成两个简单分式之差，按顺序写出正负号。", "检查相邻项是否依次抵消，只保留首尾两项，并恢复原式全部禁值。"],
       "rational-model": ["先统一路程、时间或工作量单位，用题意写出对应的分式关系。", "列式后检查平均量是否使用“总量÷总时间”，不能直接平均两个速度。"],
       "negative-exponent": ["先确认底数整体和括号；负指数表示倒数，不表示结果必为负。", "用a⁻ⁿ=1/aⁿ（a≠0）化成正整数指数，并按指数法则复核。"],
+      "integer-exponent-review": ["先分清零指数与负整数指数：非零数的零次幂为1，负指数表示倒数。", "逐项计算后再合并，并检查每一个零指数或负指数的底数都不为0。"],
       "scientific-notation-small": ["把小数点移到首个非零数字之后，使系数满足1≤|a|＜10。", "数小于1时指数为负，绝对值等于小数点向右移动的位数。"],
       "rational-equation": ["先写最简公分母及禁值，再把方程两边同乘最简公分母去分母。", "解出整式方程后必须代入原分母检验；使原分母为0的候选解是增根。"],
       "rational-word-problem": ["设未知量并用速度、效率或价格关系表示各部分，先写清单位。", "解分式方程后既要检验分母，也要判断结果是否符合实际意义。"],
@@ -177,7 +184,9 @@
       ? "第13·14章综合复习报告"
       : filter === REVIEW_1516
         ? "第15·16章综合复习报告"
-        : `${filter}练习报告`;
+        : filter === REVIEW_1718
+          ? "第17·18章综合复习报告"
+          : `${filter}练习报告`;
     return `<section class="hero"><div><span class="kicker" style="color:#d9d3ff">${isReview ? "复习讲义主线 · 独立记录" : "章节练习报告"}</span><h1>${title}</h1><p>掌握度只根据必做题中已经提交的题目计算；未作答不会被算作错误。培优题单独记录，不改变基础掌握率。</p></div><div class="hero-stats"><span><b>${currentStats.pct}%</b>必做掌握</span><span><b>${currentStats.done}/${currentStats.all}</b>必做进度</span><span><b>${challengeDone.length}/${challengeRows.length}</b>培优完成</span><span><b>${challengeRight.length}</b>培优答对</span></div></section>
       <section class="card" style="margin-top:22px"><span class="kicker">${isReview ? "按原章节查看证据" : "分知识点掌握度"}</span><div class="report-grid">${meterCards(rows, groupField)}</div>${isReview ? `<h3 style="margin-top:24px">分板块掌握度</h3><div class="report-grid">${meterCards(rows, "section")}</div>` : ""}<div class="report-summary"><b>当前建议</b><p>${masteryBand(currentStats.pct, currentStats.done, currentStats.all)}。完成全部必做题后再把此百分比作为阶段性掌握证据。</p></div><div class="footer-actions"><button class="button" onclick="print()">导出 / 保存PDF</button><a class="button" href="index.html?view=mindmap">查看同步后的思维导图</a><button class="button primary" data-view="questions">返回练习</button></div></section>`;
   }
@@ -187,9 +196,11 @@
     const chapterNav = document.querySelector?.('.course-nav a[href="math-practice.html"]');
     const review1314Nav = document.querySelector?.('.course-nav a[href="math-practice.html#review"]');
     const review1516Nav = document.querySelector?.('.course-nav a[href="math-practice.html#review15-16"]');
+    const review1718Nav = document.querySelector?.('.course-nav a[href="math-practice.html#review17-18"]');
     chapterNav?.classList.toggle("active", !isReview);
     review1314Nav?.classList.toggle("active", filter === REVIEW_1314);
     review1516Nav?.classList.toggle("active", filter === REVIEW_1516);
+    review1718Nav?.classList.toggle("active", filter === REVIEW_1718);
     if (view === "report") {
       app.innerHTML = report();
       return;
@@ -203,10 +214,16 @@
     const visibleRows = rows.slice(pageStart, pageStart + PAGE_SIZE);
     const requiredBefore = rows.slice(0, pageStart).filter((item) => item.required).length;
     const pagination = `<div class="pagination"><button class="button" data-page="${page - 1}" ${page === 0 ? "disabled" : ""}>← 上一组</button><span>第 ${page + 1} / ${totalPages} 组 · 每组最多${PAGE_SIZE}题</span><button class="button" data-page="${page + 1}" ${page === totalPages - 1 ? "disabled" : ""}>下一组 →</button></div>`;
-    const reviewHeading = filter === REVIEW_1516 ? "第15·16章<br>复习练习" : "第13·14章<br>复习练习";
-    const reviewCopy = filter === REVIEW_1516
-      ? "用24道必做题系统复盘轴对称与整式乘法，再用4道培优题完成综合迁移。"
-      : "用24道必做题系统复盘三角形与全等三角形，再用4道培优题完成综合迁移。";
+    const reviewHeading = filter === REVIEW_1718
+      ? "第17·18章<br>复习练习"
+      : filter === REVIEW_1516
+        ? "第15·16章<br>复习练习"
+        : "第13·14章<br>复习练习";
+    const reviewCopy = filter === REVIEW_1718
+      ? "用24道必做题系统复盘因式分解与分式，再用4道培优题完成方法综合和规律迁移。"
+      : filter === REVIEW_1516
+        ? "用24道必做题系统复盘轴对称与整式乘法，再用4道培优题完成综合迁移。"
+        : "用24道必做题系统复盘三角形与全等三角形，再用4道培优题完成综合迁移。";
     app.innerHTML = `<section class="hero"><div><span class="kicker" style="color:#d9d3ff">${isReview ? "以复习讲义为主 · 与原练习分别保存" : "基础 → 中等 → 提高"}</span><h1>${isReview ? reviewHeading : "第13—18章<br>分层练习"}</h1><p>${isReview ? reviewCopy : "每课时必做题覆盖教学流程，章末提高题用于综合迁移；提交后提供四步解析、动态图与AI追问。"}</p></div><div class="hero-stats"><span><b>${currentStats.done}/${currentStats.all}</b>必做进度</span><span><b>${currentStats.pct}%</b>已答掌握</span><span><b>${challenges}</b>培优挑战</span><span><b>逐题</b>图解与AI</span></div></section>
       <div class="practice-filter">${filters.map((item) => `<button data-filter="${item.name}" data-key="${item.key}" class="${filter === item.name ? "active" : ""}">${item.label}</button>`).join("")}<button data-view="report">查看掌握报告</button></div>
       ${pagination}<div class="practice-list">${(() => { let requiredIndex = requiredBefore; return visibleRows.map((item) => qcard(item, item.required ? requiredIndex++ : -1)).join(""); })()}</div>${pagination}<div class="footer-actions"><button class="button primary" data-view="report">生成${isReview ? "复习" : "章节"}报告</button></div>`;
