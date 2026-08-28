@@ -24,7 +24,7 @@
     },
     {
       id: "review-17-04", chapter, sourceChapter: "第17章 因式分解", section: "17.1 概念与公因式", point: "提公因式法", required: true, difficulty: "基础",
-      prompt: "8m²n−12mn²分解因式的正确结果是？",
+      prompt: "8m²n−12mn²彻底分解因式的正确结果是？",
       options: ["2mn(4m−6n)", "4mn(2m−3)", "4m²n²(2−3)", "4mn(2m−3n)"], answer: 3,
       explain: "两项的最大公因式是4mn。逐项相除得到2m和−3n，因此原式=4mn(2m−3n)。", diagram: "common-factor"
     },
@@ -126,15 +126,15 @@
     },
     {
       id: "review-18-07", chapter, sourceChapter: "第18章 分式", section: "18.2—18.3 分式运算", point: "分式乘法", required: true, difficulty: "中等",
-      prompt: "(4a²b)/(3c)·(9c²)/(8ab²)化简后的结果是？",
+      prompt: "(4a²b)/(3c)·(9c²)/(8ab²)化简后的结果是？（a、b、c均不为0）",
       options: ["3ab/(2c)", "2ac/(3b)", "3a²c/(2b²)", "3ac/(2b)"], answer: 3,
-      explain: "系数36/24约为3/2；a²/a=a，b/b²=1/b，c²/c=c，所以结果为3ac/(2b)。", diagram: "rational-product"
+      explain: "系数36/24约为3/2；a²/a=a，b/b²=1/b，c²/c=c，所以结果为3ac/(2b)。原式要求a、b、c均不为0。", diagram: "rational-product"
     },
     {
       id: "review-18-08", chapter, sourceChapter: "第18章 分式", section: "18.2—18.3 分式运算", point: "分式除法", required: true, difficulty: "中等",
-      prompt: "(6x²y)/(5ab)÷(9xy²)/(10a²b)化简后的结果是？",
+      prompt: "(6x²y)/(5ab)÷(9xy²)/(10a²b)化简后的结果是？（a、b、x、y均不为0）",
       options: ["4ax/(3y)", "3ax/(4y)", "4xy/(3a)", "4a²x/(3by)"], answer: 0,
-      explain: "除以分式要乘其倒数。化为(6x²y)/(5ab)·(10a²b)/(9xy²)后约分，系数为4/3，字母部分为ax/y，得到4ax/(3y)。", diagram: "rational-division"
+      explain: "除以分式要乘其倒数。化为(6x²y)/(5ab)·(10a²b)/(9xy²)后约分，系数为4/3，字母部分为ax/y，得到4ax/(3y)。原式要求a、b、x、y均不为0。", diagram: "rational-division"
     },
     {
       id: "review-18-09", chapter, sourceChapter: "第18章 分式", section: "18.4 整数指数幂", point: "负整数指数幂", required: true, difficulty: "基础",
