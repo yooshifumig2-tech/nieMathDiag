@@ -150,7 +150,7 @@
     },
     {
       id: "review-18-13", chapter, sourceChapter: "第18章 分式", section: "18.1 概念与基本性质", point: "分式的基本性质", required: true, difficulty: "基础",
-      prompt: "下列分式变形正确的是？（b、m均不为0）",
+      prompt: "下列在给定条件下恒成立的分式变形是？（b、m均不为0）",
       options: ["(a+m)/b=a/b", "a/b=a²/b²", "(a−m)/b=a/b", "a/b=am/(bm)"], answer: 3,
       explain: "分式的分子、分母同时乘同一个非零整式，分式的值不变。因此a/b=am/(bm)；只给分子加减一项或把分子、分母分别平方，都不能保证值不变。",
       diagram: "rational-property"
