@@ -20,6 +20,7 @@
   let current = (D.find((item) => item.chapter === chapter) || D[0]).id;
   const steps = {};
   let lastAnchor = "";
+  let preferScrollPosition = false;
   let recoveredPosition = null;
 
   if (savedPosition?.chapterKey === initialChapterKey) {
@@ -27,7 +28,8 @@
     if (savedLesson) {
       current = savedLesson.id;
       steps[current] = Math.max(1, Math.min(4, Number(savedPosition.diagramStep) || 1));
-      lastAnchor = String(savedPosition.anchorId || "lesson-" + current);
+      lastAnchor = typeof savedPosition.anchorId === "string" ? savedPosition.anchorId : "lesson-" + current;
+      preferScrollPosition = !lastAnchor && Number(savedPosition.scrollY) > 0;
       recoveredPosition = savedPosition;
     }
   }
@@ -38,13 +40,16 @@
       chapterKey: config.key,
       lessonId: current,
       diagramStep: steps[current] || 1,
-      anchorId: lastAnchor || "lesson-" + current,
+      anchorId: preferScrollPosition ? "" : lastAnchor || "lesson-" + current,
       scrollY: window.scrollY
     };
   }
 
   function remember(anchorId) {
-    if (anchorId) lastAnchor = anchorId;
+    if (anchorId) {
+      lastAnchor = anchorId;
+      preferScrollPosition = false;
+    }
     recovery?.flush("learn");
   }
 
@@ -98,7 +103,7 @@
       <div class="layout"><aside class="side">${lessons().map((item, index) => `<button data-lesson="${item.id}" class="${item.id === current ? "active" : ""} ${isLessonComplete(item) ? "done" : ""}"><small>课时 ${index + 1} · ${item.section}</small><b>${item.title}</b></button>`).join("")}</aside><article class="lesson">
       <section class="card lesson-head" id="lesson-${lesson.id}" data-progress-anchor><div><span class="kicker">${lesson.chapter} · ${lesson.section}</span><h2>${lesson.title}</h2><ul class="objectives">${lesson.objectives.map((item) => `<li>${item}</li>`).join("")}</ul></div><div><b>建议 ${lesson.minutes} 分钟</b><div class="progressbar"><i style="width:${progress()}%"></i></div></div></section>
       ${question(lesson.inquiry, true)}
-      <section class="card"><span class="kicker">动态推演</span><h3>点击步骤，让关系或算理逐层出现</h3><div class="diagram">${MathDiagrams.render(lesson.inquiry.diagram, step, lesson.inquiry.id)}</div><div class="step-row">${[1, 2, 3, 4].map((number) => `<button data-step="${number}" class="${step === number ? "active" : ""}">步骤 ${number}</button>`).join("")}</div></section>
+      <section class="card" id="lesson-diagram-${lesson.id}" data-progress-anchor><span class="kicker">动态推演</span><h3>点击步骤，让关系或算理逐层出现</h3><div class="diagram">${MathDiagrams.render(lesson.inquiry.diagram, step, lesson.inquiry.id)}</div><div class="step-row">${[1, 2, 3, 4].map((number) => `<button data-step="${number}" class="${step === number ? "active" : ""}">步骤 ${number}</button>`).join("")}</div></section>
       <section class="card"><span class="kicker">形成概念</span><div class="concept-grid">${lesson.cards.map((card) => `<div class="concept"><b>${card[0]}</b><span>${card[1]}</span></div>`).join("")}</div></section>
       ${lesson.checks.map((item) => question(item)).join("")}
       <section class="card"><div class="lesson-head"><div><span class="kicker">课时小结</span><h3>${completed ? "本课时已完成" : allAnswered ? "学习证据已齐全，可以完成课时" : `还需完成 ${required.length - answeredCount} 道学习任务`}</h3><p>完成要求：苏格拉底追问 ${inquiryAnswered ? 1 : 0}/1 · 即时检测 ${checksAnswered}/${lesson.checks.length}；即时检测答对 ${lesson.checks.filter((item) => lessonState.answers?.[item.id] === item.answer).length}/${lesson.checks.length}。全部作答后才可完成，结果会自动同步到思维导图。</p></div><button class="button primary" data-done aria-disabled="${!allAnswered || completed}" ${allAnswered && !completed ? "" : "disabled"}>${completed ? "已完成 ✓" : "完成本课时"}</button></div><div class="footer-actions"><a class="button" href="math-practice.html#${currentConfig.key}">去做本章练习 →</a></div></section>
@@ -120,6 +125,7 @@
       current = lessonButton.dataset.lesson;
       render();
       remember("lesson-" + current);
+      recovery?.suppressScroll();
       document.querySelector(".lesson > .lesson-head")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
@@ -127,7 +133,12 @@
     if (stepButton) {
       steps[current] = +stepButton.dataset.step;
       render();
-      remember("lesson-" + current);
+      remember("lesson-diagram-" + current);
+      return;
+    }
+    const aiButton = event.target.closest("[data-ask-ai]");
+    if (aiButton) {
+      remember("learn-q-" + aiButton.dataset.askAi);
       return;
     }
     const answerButton = event.target.closest("[data-answer]");
@@ -139,6 +150,7 @@
       MathCore.save({ lessonId: current, lessonAnswerId: questionId });
       render();
       remember("learn-q-" + questionId);
+      recovery?.suppressScroll();
       document.getElementById(`learn-q-${questionId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -150,6 +162,7 @@
       if (firstPending) {
         render();
         remember("learn-q-" + firstPending.id);
+        recovery?.suppressScroll();
         document.getElementById(`learn-q-${firstPending.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
@@ -161,12 +174,17 @@
     }
   });
 
+  window.addEventListener("scroll", () => {
+    preferScrollPosition = true;
+  }, { passive: true });
+
   window.addEventListener("hashchange", () => {
     const next = chapters.find((item) => item.key === hashKey());
     if (next && next.name !== chapter) {
       chapter = next.name;
       current = (lessons()[0] || D[0]).id;
       lastAnchor = "lesson-" + current;
+      preferScrollPosition = false;
       render();
       recovery?.flush("learn");
     }

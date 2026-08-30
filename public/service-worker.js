@@ -1,7 +1,10 @@
 "use strict";
 
 const CACHE_PREFIX = "fumi-math-static-";
-const CACHE_NAME = CACHE_PREFIX + "2026-08-30-v1";
+const CACHE_NAME = CACHE_PREFIX + "2026-08-30-v2";
+const CACHE_READ_TIMEOUT = 2000;
+const CACHE_WRITE_TIMEOUT = 10000;
+const BACKGROUND_UPDATE_TIMEOUT = 15000;
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -50,38 +53,136 @@ function cacheable(response) {
   return response && response.ok && (response.type === "basic" || response.type === "default");
 }
 
-async function networkFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 5000);
+function withTimeout(promise, milliseconds, fallback) {
+  let timer = 0;
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(fallback), milliseconds);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+async function openCache() {
   try {
-    const response = await fetch(request, { signal: controller.signal });
-    if (cacheable(response)) await cache.put(request, response.clone());
-    return response;
+    return await withTimeout(caches.open(CACHE_NAME), CACHE_READ_TIMEOUT, null);
   } catch {
-    const cached = await cache.match(request, { ignoreSearch: true });
-    if (cached) return cached;
-    const url = new URL(request.url);
-    if (url.pathname.includes("math-learn")) return cache.match("/math-learn.html");
-    if (url.pathname.includes("math-practice")) return cache.match("/math-practice.html");
-    return cache.match("/index.html");
-  } finally {
-    clearTimeout(timer);
+    return null;
   }
 }
 
-async function staleWhileRevalidate(request, event) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request, { ignoreSearch: true });
-  const fresh = fetch(request).then(async (response) => {
-    if (cacheable(response)) await cache.put(request, response.clone());
-    return response;
-  });
-  if (cached) {
-    event.waitUntil(fresh.catch(() => null));
-    return cached;
+async function safeCacheMatch(cache, request, options) {
+  if (!cache) return null;
+  try {
+    return await withTimeout(cache.match(request, options).catch(() => null), CACHE_READ_TIMEOUT, null);
+  } catch {
+    return null;
   }
-  return fresh;
+}
+
+function updateCache(request, response) {
+  if (!response) return Promise.resolve(false);
+  const update = caches.open(CACHE_NAME)
+    .then((cache) => cache.put(request, response))
+    .then(() => true)
+    .catch(() => false);
+  return withTimeout(update, CACHE_WRITE_TIMEOUT, false);
+}
+
+async function waitForNavigationBody(result) {
+  if (result.response?.status >= 500 || typeof result.response?.clone !== "function") return result;
+  const probe = result.response.clone();
+  if (typeof probe.arrayBuffer === "function") await probe.arrayBuffer();
+  return result;
+}
+
+async function navigationFallback(cache, request) {
+  if (!cache) return null;
+  const url = new URL(request.url);
+  const pathname = url.pathname.replace(/\/+$/, "") || "/";
+  const shell = pathname === "/math-learn" || pathname === "/math-learn.html"
+    ? "/math-learn.html"
+    : pathname === "/math-practice" || pathname === "/math-practice.html"
+      ? "/math-practice.html"
+      : "/index.html";
+  const candidates = [request, shell, "/index.html"];
+  const matches = await Promise.all(candidates.map((candidate) => safeCacheMatch(cache, candidate, { ignoreSearch: true })));
+  return matches.find(Boolean) || null;
+}
+
+function networkFirst(request, event) {
+  const cachePromise = openCache();
+  const networkPromise = fetch(request).then((response) => ({
+    response,
+    cacheCopy: cacheable(response) ? response.clone() : null
+  }));
+  const navigationReady = networkPromise.then(waitForNavigationBody);
+  const cacheUpdate = withTimeout(
+    networkPromise.then((result) => updateCache(request, result.cacheCopy)),
+    BACKGROUND_UPDATE_TIMEOUT,
+    false
+  );
+  event.waitUntil(cacheUpdate.catch(() => false));
+
+  return (async () => {
+    const first = await withTimeout(
+      navigationReady.then(
+        (result) => ({ kind: "network", result }),
+        (error) => ({ kind: "error", error })
+      ),
+      5000,
+      { kind: "slow" }
+    );
+
+    if (first.kind === "network" && first.result.response?.status < 500) {
+      return first.result.response;
+    }
+
+    const cache = await cachePromise;
+    if (first.kind === "error") {
+      const fallback = await navigationFallback(cache, request).catch(() => null);
+      if (fallback) return fallback;
+      throw first.error;
+    }
+
+    if (first.kind === "slow") {
+      const fallback = await navigationFallback(cache, request).catch(() => null);
+      if (fallback) return fallback;
+    }
+
+    let result;
+    try {
+      result = first.kind === "network" ? first.result : await networkPromise;
+    } catch {
+      const fallback = await navigationFallback(cache, request).catch(() => null);
+      if (fallback) return fallback;
+      throw new Error("Network unavailable and no cached page is ready");
+    }
+
+    if (result.response?.status >= 500) {
+      const fallback = await navigationFallback(cache, request).catch(() => null);
+      if (fallback) return fallback;
+    }
+    return result.response;
+  })();
+}
+
+function staleWhileRevalidate(request, event) {
+  const cachePromise = openCache();
+  const fresh = fetch(request).then((response) => ({
+    response,
+    cacheCopy: cacheable(response) ? response.clone() : null
+  }));
+  const cacheUpdate = withTimeout(
+    fresh.then((result) => updateCache(request, result.cacheCopy)),
+    BACKGROUND_UPDATE_TIMEOUT,
+    false
+  );
+  event.waitUntil(cacheUpdate.catch(() => false));
+  return (async () => {
+    const cache = await cachePromise;
+    const cached = await safeCacheMatch(cache, request);
+    if (cached) return cached;
+    return (await fresh).response;
+  })();
 }
 
 self.addEventListener("fetch", (event) => {
@@ -95,7 +196,7 @@ self.addEventListener("fetch", (event) => {
   ) return;
 
   if (request.mode === "navigate") {
-    event.respondWith(networkFirst(request));
+    event.respondWith(networkFirst(request, event));
     return;
   }
 

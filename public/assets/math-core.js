@@ -8,8 +8,15 @@
   diagramStyle.rel = "stylesheet";
   diagramStyle.href = "assets/math-diagram-contrast.css";
   document.head.append(diagramStyle);
-  const KEY = "fumi-math-course:v1";
-  const BACKUP_KEY = "fumi-math-course:backup:v1";
+  const LEGACY_KEY = "fumi-math-course:v1";
+  const LEGACY_BACKUP_KEY = "fumi-math-course:backup:v1";
+  const KEY = "fumi-math-course:v2";
+  const BACKUP_KEY = "fumi-math-course:backup:v2";
+  const RECORD_PREFIX = "fumi-math-course:record:v2:";
+  const WRITER_ID = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+  let recordSequence = 0;
   const MAP_KEY = "fumi-math-map:learning-tools:v1";
   const REVIEW_CHAPTER = "第13·14章 复习练习";
   const REVIEW_CHAPTER_15_16 = "第15·16章 复习练习";
@@ -29,10 +36,20 @@
     { number: 17, name: "第17章 因式分解", domain: "代数变形", rootId: "domain-5", color: COLORS.pink },
     { number: 18, name: "第18章 分式", domain: "数与式", rootId: "domain-0", color: COLORS.blue }
   ];
-  const defaults = { lesson: {}, practice: { answers: {}, submitted: {}, step: {} }, meta: { lesson: {}, lessonAnswers: {}, practice: {} }, updatedAt: null };
+  const defaults = { lesson: {}, practice: { answers: {}, submitted: {}, step: {} }, meta: { lesson: {}, lessonAnswers: {}, practice: {}, practiceFields: {} }, updatedAt: null };
 
   function fresh() {
     return JSON.parse(JSON.stringify(defaults));
+  }
+
+  function preciseNow() {
+    const wallTime = Date.now();
+    try {
+      const highResolution = Number(performance.timeOrigin) + Number(performance.now());
+      return Number.isFinite(highResolution) ? Math.max(wallTime, highResolution) : wallTime;
+    } catch {
+      return wallTime;
+    }
   }
 
   function safeObject(value) {
@@ -41,21 +58,76 @@
 
   function normalize(saved) {
     const source = safeObject(saved);
+    const lesson = safeObject(source.lesson);
     const practice = safeObject(source.practice);
     const meta = safeObject(source.meta);
+    const updatedAt = Number(source.updatedAt) || 0;
+    const lessonMeta = { ...safeObject(meta.lesson) };
+    const lessonAnswerMeta = { ...safeObject(meta.lessonAnswers) };
+    const practiceMeta = { ...safeObject(meta.practice) };
+    const rawPracticeFields = safeObject(meta.practiceFields);
+    const practiceFields = {};
+    Object.keys(lesson).forEach((lessonId) => {
+      const completedAt = lesson[lessonId]?.done ? Number(lesson[lessonId]?.completedAt) || 0 : 0;
+      if (!Object.prototype.hasOwnProperty.call(lessonMeta, lessonId)) lessonMeta[lessonId] = completedAt || updatedAt;
+      Object.keys(safeObject(lesson[lessonId]?.answers)).forEach((questionId) => {
+        if (!Object.prototype.hasOwnProperty.call(lessonAnswerMeta, questionId)) lessonAnswerMeta[questionId] = completedAt || updatedAt;
+      });
+    });
+    const practiceIds = new Set([
+      ...Object.keys(safeObject(practice.answers)),
+      ...Object.keys(safeObject(practice.submitted)),
+      ...Object.keys(safeObject(practice.step))
+    ]);
+    practiceIds.forEach((questionId) => {
+      if (!Object.prototype.hasOwnProperty.call(practiceMeta, questionId)) practiceMeta[questionId] = updatedAt;
+      const legacyClock = Number(practiceMeta[questionId]) || updatedAt;
+      const rawFields = safeObject(rawPracticeFields[questionId]);
+      const hasFieldMeta = Object.prototype.hasOwnProperty.call(rawPracticeFields, questionId);
+      const submittedAt = Number(practice.submitted?.[questionId]) || 0;
+      const fieldClock = (field) => Object.prototype.hasOwnProperty.call(rawFields, field)
+        ? Number(rawFields[field]) || 0
+        : hasFieldMeta ? 0 : field === "submitted" ? submittedAt : field === "answers" ? submittedAt || legacyClock : legacyClock;
+      practiceFields[questionId] = {
+        answers: fieldClock("answers"),
+        submitted: fieldClock("submitted"),
+        step: fieldClock("step")
+      };
+      practiceMeta[questionId] = Math.max(
+        practiceFields[questionId].answers,
+        practiceFields[questionId].submitted,
+        practiceFields[questionId].step
+      );
+    });
+    Object.keys(rawPracticeFields).forEach((questionId) => {
+      if (practiceFields[questionId]) return;
+      const rawFields = safeObject(rawPracticeFields[questionId]);
+      practiceFields[questionId] = {
+        answers: Number(rawFields.answers) || 0,
+        submitted: Number(rawFields.submitted) || 0,
+        step: Number(rawFields.step) || 0
+      };
+      practiceMeta[questionId] = Math.max(
+        Number(practiceMeta[questionId]) || 0,
+        practiceFields[questionId].answers,
+        practiceFields[questionId].submitted,
+        practiceFields[questionId].step
+      );
+    });
     return {
-      lesson: safeObject(source.lesson),
+      lesson,
       practice: {
         answers: safeObject(practice.answers),
         submitted: safeObject(practice.submitted),
         step: safeObject(practice.step)
       },
       meta: {
-        lesson: safeObject(meta.lesson),
-        lessonAnswers: safeObject(meta.lessonAnswers),
-        practice: safeObject(meta.practice)
+        lesson: lessonMeta,
+        lessonAnswers: lessonAnswerMeta,
+        practice: practiceMeta,
+        practiceFields
       },
-      updatedAt: Number(source.updatedAt) || 0
+      updatedAt
     };
   }
 
@@ -68,17 +140,369 @@
     }
   }
 
+  function buildLegacyDelta(currentValue, legacyValue) {
+    const current = normalize(currentValue);
+    const legacy = normalize(legacyValue);
+    const delta = { lessons: {}, practiceAnswers: {}, practiceSubmissions: {}, practiceSteps: {} };
+
+    Object.entries(legacy.lesson).forEach(([lessonId, legacyLessonValue]) => {
+      const legacyLesson = safeObject(legacyLessonValue);
+      const currentLesson = safeObject(current.lesson[lessonId]);
+      const legacyAnswers = safeObject(legacyLesson.answers);
+      const currentAnswers = safeObject(currentLesson.answers);
+      if (legacyLesson.done && !currentLesson.done) {
+        delta.lessons[lessonId] = { completed: clone(legacyLesson) };
+        return;
+      }
+      if (currentLesson.done) return;
+      const answers = {};
+      Object.keys(legacyAnswers).forEach((questionId) => {
+        if (Object.prototype.hasOwnProperty.call(currentAnswers, questionId)) return;
+        answers[questionId] = legacyAnswers[questionId];
+      });
+      if (Object.keys(answers).length) delta.lessons[lessonId] = { answers };
+    });
+
+    const practiceIds = new Set([
+      ...Object.keys(legacy.practice.answers),
+      ...Object.keys(legacy.practice.submitted),
+      ...Object.keys(legacy.practice.step)
+    ]);
+    practiceIds.forEach((questionId) => {
+      const hasLegacyAnswer = Object.prototype.hasOwnProperty.call(legacy.practice.answers, questionId);
+      const hasCurrentAnswer = Object.prototype.hasOwnProperty.call(current.practice.answers, questionId);
+      const legacySubmitted = Number(legacy.practice.submitted[questionId]) || 0;
+      const currentSubmitted = Number(current.practice.submitted[questionId]) || 0;
+
+      if (legacySubmitted && !currentSubmitted && hasLegacyAnswer) {
+        delta.practiceSubmissions[questionId] = {
+          answer: legacy.practice.answers[questionId],
+          submitted: legacySubmitted,
+          step: legacy.practice.step[questionId]
+        };
+        return;
+      }
+
+      if (!currentSubmitted && !hasCurrentAnswer && hasLegacyAnswer) {
+        delta.practiceAnswers[questionId] = legacy.practice.answers[questionId];
+      }
+
+      const legacyStep = Number(legacy.practice.step[questionId]);
+      const hasCurrentStep = Object.prototype.hasOwnProperty.call(current.practice.step, questionId);
+      if (currentSubmitted && Number.isFinite(legacyStep) && !hasCurrentStep) {
+        delta.practiceSteps[questionId] = legacyStep;
+      }
+    });
+
+    return delta;
+  }
+
+  function hasLegacyDelta(delta) {
+    return Object.values(delta || {}).some((group) => Object.keys(safeObject(group)).length > 0);
+  }
+
+  function applyLegacyDelta(target, deltaValue, timestamp) {
+    const result = normalize(clone(target));
+    const delta = safeObject(deltaValue);
+    let changed = false;
+    Object.entries(safeObject(delta.lessons)).forEach(([lessonId, lessonDeltaValue]) => {
+      const lessonDelta = safeObject(lessonDeltaValue);
+      const currentLesson = safeObject(result.lesson[lessonId]);
+      if (lessonDelta.completed && !currentLesson.done) {
+        const completed = clone(safeObject(lessonDelta.completed));
+        result.lesson[lessonId] = completed;
+        result.meta.lesson[lessonId] = Math.max(timestamp, Number(completed.completedAt) || 0);
+        Object.keys(safeObject(completed.answers)).forEach((questionId) => {
+          result.meta.lessonAnswers[questionId] = Math.max(timestamp, Number(completed.completedAt) || 0);
+        });
+        changed = true;
+        return;
+      }
+      if (currentLesson.done) return;
+      const answers = { ...safeObject(currentLesson.answers) };
+      let lessonChanged = false;
+      Object.entries(safeObject(lessonDelta.answers)).forEach(([questionId, answer]) => {
+        if (Object.prototype.hasOwnProperty.call(answers, questionId)) return;
+        answers[questionId] = answer;
+        result.meta.lessonAnswers[questionId] = timestamp;
+        lessonChanged = true;
+      });
+      if (lessonChanged) {
+        result.lesson[lessonId] = { ...currentLesson, answers };
+        result.meta.lesson[lessonId] = Math.max(Number(result.meta.lesson[lessonId]) || 0, timestamp);
+        changed = true;
+      }
+    });
+
+    Object.entries(safeObject(delta.practiceSubmissions)).forEach(([questionId, submissionValue]) => {
+      if (result.practice.submitted[questionId]) return;
+      const submission = safeObject(submissionValue);
+      const submittedAt = Number(submission.submitted) || 0;
+      if (!submittedAt || submission.answer === undefined) return;
+      result.practice.answers[questionId] = submission.answer;
+      result.practice.submitted[questionId] = submittedAt;
+      if (submission.step !== undefined) result.practice.step[questionId] = submission.step;
+      result.meta.practiceFields[questionId] = {
+        answers: timestamp,
+        submitted: timestamp,
+        step: submission.step === undefined ? 0 : timestamp
+      };
+      result.meta.practice[questionId] = timestamp;
+      changed = true;
+    });
+
+    Object.entries(safeObject(delta.practiceAnswers)).forEach(([questionId, answer]) => {
+      if (result.practice.submitted[questionId] || Object.prototype.hasOwnProperty.call(result.practice.answers, questionId)) return;
+      result.practice.answers[questionId] = answer;
+      const fieldTimes = safeObject(result.meta.practiceFields[questionId]);
+      result.meta.practiceFields[questionId] = { ...fieldTimes, answers: timestamp };
+      result.meta.practice[questionId] = Math.max(Number(result.meta.practice[questionId]) || 0, timestamp);
+      changed = true;
+    });
+
+    Object.entries(safeObject(delta.practiceSteps)).forEach(([questionId, step]) => {
+      if (!result.practice.submitted[questionId]) return;
+      const nextStep = Number(step);
+      if (!Number.isFinite(nextStep) || Object.prototype.hasOwnProperty.call(result.practice.step, questionId)) return;
+      result.practice.step[questionId] = nextStep;
+      const fieldTimes = safeObject(result.meta.practiceFields[questionId]);
+      result.meta.practiceFields[questionId] = { ...fieldTimes, step: timestamp };
+      result.meta.practice[questionId] = Math.max(Number(result.meta.practice[questionId]) || 0, timestamp);
+      changed = true;
+    });
+    if (changed) result.updatedAt = Math.max(Number(result.updatedAt) || 0, timestamp);
+    return result;
+  }
+
+  function stableStringify(value) {
+    if (Array.isArray(value)) return "[" + value.map(stableStringify).join(",") + "]";
+    if (value && typeof value === "object") {
+      return "{" + Object.keys(value).sort().map((key) => JSON.stringify(key) + ":" + stableStringify(value[key])).join(",") + "}";
+    }
+    return JSON.stringify(value);
+  }
+
+  function stableHash(value) {
+    const text = stableStringify(value);
+    let hash = 2166136261;
+    for (let index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(36) + "-" + text.length.toString(36);
+  }
+
+  function persistLegacyDelta(delta, timestamp) {
+    const record = { type: "legacy-import", value: delta, timestamp };
+    const key = RECORD_PREFIX + String(timestamp).padStart(16, "0") + ":legacy:" + stableHash(record);
+    return persistRecord(key, record);
+  }
+
   function load() {
     const primary = readSnapshot(KEY);
     const backup = readSnapshot(BACKUP_KEY);
-    if (!primary && !backup) return fresh();
-    if (!primary) return backup;
-    if (!backup) return primary;
-    return backup.updatedAt > primary.updatedAt ? backup : primary;
+    const legacyPrimary = readSnapshot(LEGACY_KEY);
+    const legacyBackup = readSnapshot(LEGACY_BACKUP_KEY);
+    const legacy = !legacyPrimary ? legacyBackup : !legacyBackup ? legacyPrimary : mergeSnapshots(legacyPrimary, legacyBackup);
+    const records = readRecordLog();
+    const hasCurrent = Boolean(primary || backup || records.length);
+    let base;
+    if (!primary && !backup) base = fresh();
+    else if (!primary) base = backup;
+    else if (!backup) base = primary;
+    else base = mergeSnapshots(primary, backup);
+    let result = applyRecordLog(base, records);
+    if (legacy) {
+      const delta = buildLegacyDelta(result, legacy);
+      if (hasLegacyDelta(delta)) {
+        const timestamp = Math.max(Number(legacy.updatedAt) || 0, 1);
+        if (persistLegacyDelta(delta, timestamp)) result = applyLegacyDelta(result, delta, timestamp);
+        else {
+          announceSave(false, timestamp);
+          if (!hasCurrent) result = legacy;
+        }
+      }
+    }
+    return result;
   }
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  function recordKey(type, lessonId, questionId, timestamp) {
+    recordSequence += 1;
+    const order = [String(timestamp).padStart(16, "0"), WRITER_ID, String(recordSequence).padStart(6, "0")].join(":");
+    return RECORD_PREFIX + order + ":" + encodeURIComponent([type, lessonId || "", questionId || ""].join("|"));
+  }
+
+  function persistRecord(key, record) {
+    try {
+      const payload = JSON.stringify(record);
+      localStorage.setItem(key, payload);
+      return localStorage.getItem(key) === payload;
+    } catch {
+      return false;
+    }
+  }
+
+  function writeRecord(change, timestamp) {
+    if (!change || typeof change !== "object") return false;
+    let key = "";
+    let record = null;
+    if (change.lessonId && change.lessonAnswerId) {
+      const lessonState = safeObject(state.lesson[change.lessonId]);
+      const answers = safeObject(lessonState.answers);
+      if (!Object.prototype.hasOwnProperty.call(answers, change.lessonAnswerId)) return false;
+      key = recordKey("lesson-answer", change.lessonId, change.lessonAnswerId, timestamp);
+      record = {
+        type: "lesson-answer",
+        lessonId: change.lessonId,
+        questionId: change.lessonAnswerId,
+        value: answers[change.lessonAnswerId],
+        timestamp
+      };
+    } else if (change.lessonId) {
+      const value = clone(safeObject(state.lesson[change.lessonId]));
+      key = recordKey("lesson", change.lessonId, "", timestamp);
+      record = { type: "lesson", lessonId: change.lessonId, value, timestamp };
+    } else if (change.practiceId) {
+      const questionId = change.practiceId;
+      if (change.practiceSubmit) {
+        const value = {
+          answer: state.practice.answers[questionId],
+          submitted: state.practice.submitted[questionId],
+          step: state.practice.step[questionId]
+        };
+        if (value.answer === undefined || !Number(value.submitted)) return false;
+        key = recordKey("practice-submit", "", questionId, timestamp);
+        record = { type: "practice-submit", questionId, value, timestamp };
+        return persistRecord(key, record);
+      }
+      const requestedFields = Array.isArray(change.practiceFields) ? change.practiceFields : ["answers", "submitted", "step"];
+      const fields = [...new Set(requestedFields)].filter((field) => ["answers", "submitted", "step"].includes(field));
+      let attempted = 0;
+      let saved = 0;
+      fields.forEach((field) => {
+        if (!Object.prototype.hasOwnProperty.call(state.practice[field], questionId)) return;
+        attempted += 1;
+        const fieldKey = recordKey("practice-field", "", questionId + "|" + field, timestamp);
+        const fieldRecord = { type: "practice-field", questionId, field, value: state.practice[field][questionId], timestamp };
+        if (persistRecord(fieldKey, fieldRecord)) saved += 1;
+      });
+      return attempted > 0 && saved === attempted;
+    }
+    if (!key || !record) return false;
+    return persistRecord(key, record);
+  }
+
+  function readRecordLog() {
+    const records = [];
+    let length = 0;
+    try { length = Number(localStorage.length) || 0; } catch {}
+    for (let index = 0; index < length; index += 1) {
+      let key = "";
+      let record = null;
+      try {
+        key = localStorage.key(index) || "";
+        if (!key.startsWith(RECORD_PREFIX)) continue;
+        record = JSON.parse(localStorage.getItem(key) || "null");
+      } catch {
+        continue;
+      }
+      const timestamp = Number(record?.timestamp) || 0;
+      if (!timestamp) continue;
+      records.push({ ...record, timestamp, storageKey: key });
+    }
+    return records.sort((first, second) => first.timestamp - second.timestamp || first.storageKey.localeCompare(second.storageKey));
+  }
+
+  function applyRecordLog(value, records = readRecordLog()) {
+    const result = normalize(value);
+    const submissionWinners = new Map();
+    const completionWinners = new Map();
+    const earlierEvidence = (candidate, current) => {
+      if (!current) return true;
+      return candidate.timestamp < current.timestamp
+        || (candidate.timestamp === current.timestamp && candidate.storageKey < current.storageKey);
+    };
+    records.forEach((record) => {
+      if (record.type === "practice-submit" && Number(record.value?.submitted)) {
+        const current = submissionWinners.get(record.questionId);
+        if (earlierEvidence(record, current)) submissionWinners.set(record.questionId, record);
+      }
+      if (record.type === "lesson" && record.value?.done) {
+        const current = completionWinners.get(record.lessonId);
+        if (earlierEvidence(record, current)) completionWinners.set(record.lessonId, record);
+      }
+    });
+    records.forEach((record) => {
+      const timestamp = record.timestamp;
+      if (record.type === "legacy-import") {
+        const imported = applyLegacyDelta(result, record.value, timestamp);
+        replaceRecord(result.lesson, imported.lesson);
+        replaceRecord(result.practice.answers, imported.practice.answers);
+        replaceRecord(result.practice.submitted, imported.practice.submitted);
+        replaceRecord(result.practice.step, imported.practice.step);
+        replaceRecord(result.meta.lesson, imported.meta.lesson);
+        replaceRecord(result.meta.lessonAnswers, imported.meta.lessonAnswers);
+        replaceRecord(result.meta.practice, imported.meta.practice);
+        replaceRecord(result.meta.practiceFields, imported.meta.practiceFields);
+        result.updatedAt = Math.max(result.updatedAt, imported.updatedAt);
+      } else if (record.type === "lesson-answer" && record.lessonId && record.questionId) {
+        if (result.lesson[record.lessonId]?.done) return;
+        const currentTime = Number(result.meta.lessonAnswers[record.questionId]) || 0;
+        if (timestamp < currentTime) return;
+        const lessonState = safeObject(result.lesson[record.lessonId]);
+        lessonState.answers = { ...safeObject(lessonState.answers), [record.questionId]: record.value };
+        result.lesson[record.lessonId] = lessonState;
+        result.meta.lessonAnswers[record.questionId] = timestamp;
+      } else if (record.type === "lesson" && record.lessonId) {
+        const currentTime = Number(result.meta.lesson[record.lessonId]) || 0;
+        const lessonState = safeObject(result.lesson[record.lessonId]);
+        const recordValue = safeObject(record.value);
+        if (recordValue.done && completionWinners.get(record.lessonId)?.storageKey !== record.storageKey) return;
+        if (!recordValue.done && timestamp < currentTime) return;
+        const existingCompletedAt = lessonState.done ? Number(lessonState.completedAt) || currentTime : 0;
+        if (existingCompletedAt && recordValue.done && currentTime < timestamp) return;
+        const answers = recordValue.done ? safeObject(recordValue.answers) : safeObject(lessonState.answers);
+        result.lesson[record.lessonId] = { ...lessonState, ...recordValue, answers: { ...answers } };
+        result.meta.lesson[record.lessonId] = timestamp;
+        if (recordValue.done) {
+          Object.keys(answers).forEach((questionId) => {
+            result.meta.lessonAnswers[questionId] = timestamp;
+          });
+        }
+      } else if (record.type === "practice-submit" && record.questionId) {
+        if (submissionWinners.get(record.questionId)?.storageKey !== record.storageKey) return;
+        const recordValue = safeObject(record.value);
+        const submittedAt = Number(recordValue.submitted) || 0;
+        const existingSubmittedAt = Number(result.practice.submitted[record.questionId]) || 0;
+        const existingEvidenceTime = Number(result.meta.practiceFields[record.questionId]?.submitted) || 0;
+        if (!submittedAt || (existingSubmittedAt && existingEvidenceTime < timestamp)) return;
+        result.practice.answers[record.questionId] = recordValue.answer;
+        result.practice.submitted[record.questionId] = submittedAt;
+        if (recordValue.step !== undefined) result.practice.step[record.questionId] = recordValue.step;
+        const fieldTimes = safeObject(result.meta.practiceFields[record.questionId]);
+        result.meta.practiceFields[record.questionId] = {
+          ...fieldTimes,
+          answers: timestamp,
+          submitted: timestamp,
+          step: recordValue.step !== undefined ? timestamp : Number(fieldTimes.step) || 0
+        };
+        result.meta.practice[record.questionId] = Math.max(Number(result.meta.practice[record.questionId]) || 0, timestamp);
+      } else if (record.type === "practice-field" && record.questionId && ["answers", "submitted", "step"].includes(record.field)) {
+        if (record.field === "answers" && result.practice.submitted[record.questionId]) return;
+        const fieldTimes = safeObject(result.meta.practiceFields[record.questionId]);
+        const currentTime = Number(fieldTimes[record.field]) || 0;
+        if (timestamp < currentTime) return;
+        result.practice[record.field][record.questionId] = record.value;
+        result.meta.practiceFields[record.questionId] = { ...fieldTimes, [record.field]: timestamp };
+        result.meta.practice[record.questionId] = Math.max(Number(result.meta.practice[record.questionId]) || 0, timestamp);
+      }
+      result.updatedAt = Math.max(result.updatedAt, timestamp);
+    });
+    return result;
   }
 
   function mergeSnapshots(localValue, remoteValue) {
@@ -97,6 +521,32 @@
       const remoteLesson = safeObject(remote.lesson[lessonId]);
       const localTime = Number(local.meta.lesson[lessonId]) || 0;
       const remoteTime = Number(remote.meta.lesson[lessonId]) || 0;
+      const localCompletedAt = localLesson.done ? Number(localLesson.completedAt) || localTime : 0;
+      const remoteCompletedAt = remoteLesson.done ? Number(remoteLesson.completedAt) || remoteTime : 0;
+      if (localCompletedAt || remoteCompletedAt) {
+        let chosen = localLesson;
+        let chosenTime = localTime;
+        if (!localCompletedAt || (remoteCompletedAt && remoteCompletedAt < localCompletedAt)) {
+          chosen = remoteLesson;
+          chosenTime = remoteTime;
+        } else if (localCompletedAt === remoteCompletedAt && remoteCompletedAt) {
+          const remoteWins = remote.updatedAt < local.updatedAt
+            || (remote.updatedAt === local.updatedAt && JSON.stringify(remoteLesson) > JSON.stringify(localLesson));
+          if (remoteWins) {
+            chosen = remoteLesson;
+            chosenTime = remoteTime;
+          }
+        }
+        result.lesson[lessonId] = clone(chosen);
+        result.meta.lesson[lessonId] = Math.max(chosenTime, Number(chosen.completedAt) || 0);
+        Object.keys(safeObject(chosen.answers)).forEach((questionId) => {
+          result.meta.lessonAnswers[questionId] = Math.max(
+            Number((chosen === localLesson ? local : remote).meta.lessonAnswers[questionId]) || 0,
+            Number(chosen.completedAt) || 0
+          );
+        });
+        return;
+      }
       const shell = remoteTime > localTime
         ? { ...localLesson, ...remoteLesson }
         : { ...remoteLesson, ...localLesson };
@@ -129,12 +579,51 @@
       ...Object.keys(remote.practice.submitted),
       ...Object.keys(remote.practice.step),
       ...Object.keys(local.meta.practice),
-      ...Object.keys(remote.meta.practice)
+      ...Object.keys(remote.meta.practice),
+      ...Object.keys(local.meta.practiceFields),
+      ...Object.keys(remote.meta.practiceFields)
     ]);
     practiceIds.forEach((questionId) => {
-      const localTime = Number(local.meta.practice[questionId]) || 0;
-      const remoteTime = Number(remote.meta.practice[questionId]) || 0;
+      const localSubmittedAt = Number(local.practice.submitted[questionId]) || 0;
+      const remoteSubmittedAt = Number(remote.practice.submitted[questionId]) || 0;
+      result.meta.practiceFields[questionId] = {};
+      if (localSubmittedAt || remoteSubmittedAt) {
+        let chosen = local;
+        if (!localSubmittedAt || (remoteSubmittedAt && remoteSubmittedAt < localSubmittedAt)) chosen = remote;
+        else if (localSubmittedAt === remoteSubmittedAt && remoteSubmittedAt) {
+          const remoteWins = remote.updatedAt < local.updatedAt
+            || (remote.updatedAt === local.updatedAt && JSON.stringify(remote.practice.answers[questionId]) > JSON.stringify(local.practice.answers[questionId]));
+          if (remoteWins) chosen = remote;
+        }
+        if (Object.prototype.hasOwnProperty.call(chosen.practice.answers, questionId)) {
+          result.practice.answers[questionId] = chosen.practice.answers[questionId];
+        }
+        result.practice.submitted[questionId] = chosen.practice.submitted[questionId];
+        const localStepTime = Number(local.meta.practiceFields[questionId]?.step) || 0;
+        const remoteStepTime = Number(remote.meta.practiceFields[questionId]?.step) || 0;
+        if (remoteStepTime > localStepTime && Object.prototype.hasOwnProperty.call(remote.practice.step, questionId)) {
+          result.practice.step[questionId] = remote.practice.step[questionId];
+        } else if (Object.prototype.hasOwnProperty.call(local.practice.step, questionId)) {
+          result.practice.step[questionId] = local.practice.step[questionId];
+        } else if (Object.prototype.hasOwnProperty.call(remote.practice.step, questionId)) {
+          result.practice.step[questionId] = remote.practice.step[questionId];
+        }
+        const chosenSubmittedAt = Number(chosen.practice.submitted[questionId]) || 0;
+        const chosenFieldTimes = safeObject(chosen.meta.practiceFields[questionId]);
+        result.meta.practiceFields[questionId] = {
+          answers: Math.max(Number(chosenFieldTimes.answers) || 0, chosenSubmittedAt),
+          submitted: Math.max(Number(chosenFieldTimes.submitted) || 0, chosenSubmittedAt),
+          step: Math.max(localStepTime, remoteStepTime)
+        };
+        result.meta.practice[questionId] = Math.max(
+          Number(chosen.meta.practice[questionId]) || 0,
+          ...Object.values(result.meta.practiceFields[questionId]).map((value) => Number(value) || 0)
+        );
+        return;
+      }
       ["answers", "submitted", "step"].forEach((field) => {
+        const localTime = Number(local.meta.practiceFields[questionId]?.[field]) || 0;
+        const remoteTime = Number(remote.meta.practiceFields[questionId]?.[field]) || 0;
         const localField = local.practice[field];
         const remoteField = remote.practice[field];
         if (remoteTime > localTime && Object.prototype.hasOwnProperty.call(remoteField, questionId)) {
@@ -144,14 +633,28 @@
         } else if (Object.prototype.hasOwnProperty.call(remoteField, questionId)) {
           result.practice[field][questionId] = remoteField[questionId];
         }
+        result.meta.practiceFields[questionId][field] = Math.max(localTime, remoteTime);
       });
-      result.meta.practice[questionId] = Math.max(localTime, remoteTime);
+      result.meta.practice[questionId] = Math.max(
+        Number(local.meta.practice[questionId]) || 0,
+        Number(remote.meta.practice[questionId]) || 0,
+        ...Object.values(result.meta.practiceFields[questionId]).map((value) => Number(value) || 0)
+      );
     });
     result.updatedAt = Math.max(local.updatedAt, remote.updatedAt);
     return result;
   }
 
   let state = load();
+
+  function persistMigration() {
+    if (readSnapshot(KEY) || readSnapshot(BACKUP_KEY)) return;
+    const payload = JSON.stringify(state);
+    try { localStorage.setItem(KEY, payload); } catch {}
+    try { localStorage.setItem(BACKUP_KEY, payload); } catch {}
+  }
+
+  persistMigration();
 
   function replaceRecord(target, source) {
     Object.keys(target).forEach((key) => delete target[key]);
@@ -167,6 +670,7 @@
     replaceRecord(state.meta.lesson, next.meta.lesson);
     replaceRecord(state.meta.lessonAnswers, next.meta.lessonAnswers);
     replaceRecord(state.meta.practice, next.meta.practice);
+    replaceRecord(state.meta.practiceFields, next.meta.practiceFields);
     state.updatedAt = next.updatedAt;
   }
 
@@ -179,7 +683,15 @@
       state.meta.lesson[change.lessonId] = timestamp;
     }
     if (change.practiceId) {
-      state.meta.practice[change.practiceId] = timestamp;
+      const fields = Array.isArray(change.practiceFields) ? change.practiceFields : ["answers", "submitted", "step"];
+      state.meta.practiceFields[change.practiceId] = { ...safeObject(state.meta.practiceFields[change.practiceId]) };
+      fields.filter((field) => ["answers", "submitted", "step"].includes(field)).forEach((field) => {
+        state.meta.practiceFields[change.practiceId][field] = timestamp;
+      });
+      state.meta.practice[change.practiceId] = Math.max(
+        Number(state.meta.practice[change.practiceId]) || 0,
+        timestamp
+      );
     }
   }
 
@@ -192,9 +704,10 @@
   }
 
   function save(change) {
-    const timestamp = Date.now();
-    markChange(change, timestamp);
     const latest = load();
+    const timestamp = Math.max(preciseNow(), Number(state.updatedAt) + 1, Number(latest.updatedAt) + 1);
+    markChange(change, timestamp);
+    const recordSaved = writeRecord(change, timestamp);
     applySnapshot(mergeSnapshots(state, latest));
     state.updatedAt = timestamp;
     const payload = JSON.stringify(state);
@@ -208,7 +721,8 @@
       localStorage.setItem(BACKUP_KEY, payload);
       backup = localStorage.getItem(BACKUP_KEY) === payload;
     } catch {}
-    const ok = primary || backup;
+    const requiresRecord = Boolean(change?.lessonId || change?.practiceId);
+    const ok = requiresRecord ? recordSaved : primary || backup;
     announceSave(ok, timestamp);
     syncMap();
     return ok;
@@ -472,9 +986,18 @@
   }
 
   window.addEventListener("storage", (event) => {
-    if (event.key !== KEY && event.key !== BACKUP_KEY) return;
+    if (
+      event.key !== KEY
+      && event.key !== BACKUP_KEY
+      && event.key !== LEGACY_KEY
+      && event.key !== LEGACY_BACKUP_KEY
+      && !event.key?.startsWith(RECORD_PREFIX)
+    ) return;
+    const before = JSON.stringify(state);
     const latest = load();
-    applySnapshot(mergeSnapshots(state, latest));
+    const merged = mergeSnapshots(state, latest);
+    if (JSON.stringify(merged) === before) return;
+    applySnapshot(merged);
     try {
       window.dispatchEvent(new CustomEvent("fumi-progress-updated"));
     } catch {}
