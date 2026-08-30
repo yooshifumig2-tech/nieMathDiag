@@ -9,6 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:netlify": "next build",
+    "test:progress": "node --test tests/progress-recovery.test.cjs",
     "start": "next start",
     "lint": "eslint ."
   },

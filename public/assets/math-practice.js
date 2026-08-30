@@ -6,6 +6,7 @@
   const REVIEW_1516 = "第15·16章 复习练习";
   const REVIEW_1718 = "第17·18章 复习练习";
   const REVIEW_FILTERS = new Set([REVIEW_1314, REVIEW_1516, REVIEW_1718]);
+  const recovery = window.FumiRecovery;
   const filters = [
     { key: "13", name: "第13章 三角形", label: "第13章" },
     { key: "14", name: "第14章 全等三角形", label: "第14章" },
@@ -33,16 +34,56 @@
     "review-15-05": 3, "review-15-06": 2, "review-15-07": 2,
     "review-15-10": 2, "review-15-12": 2
   };
-  const hashKey = () => {
-    const raw = location.hash.replace("#", "");
+  const hashKey = (hash = location.hash) => {
+    const raw = hash.replace("#", "");
     if (raw.includes("review15-16")) return "review15-16";
     if (raw.includes("review17-18")) return "review17-18";
     if (raw.includes("review")) return "review";
     return (raw.match(/13|14|15|16|17|18/) || ["13"])[0];
   };
-  let filter = (filters.find((item) => item.key === hashKey()) || filters[0]).name;
-  let view = "questions";
-  let page = 0;
+  const explicitHashKey = () => {
+    const raw = location.hash.replace("#", "");
+    if (!raw) return "";
+    if (raw.includes("review15-16")) return "review15-16";
+    if (raw.includes("review17-18")) return "review17-18";
+    if (raw.includes("review")) return "review";
+    return (raw.match(/(?:^|[^0-9])(13|14|15|16|17|18)(?:[^0-9]|$)/) || [])[1] || "";
+  };
+  const savedPosition = recovery?.read("practice");
+  const savedFilterKey = filters.some((item) => item.key === savedPosition?.filterKey)
+    ? savedPosition.filterKey
+    : "";
+  const initialFilterKey = explicitHashKey() || savedFilterKey || "13";
+  const canResumePosition = Boolean(savedPosition && (!explicitHashKey() || savedFilterKey === explicitHashKey()));
+  let filter = (filters.find((item) => item.key === initialFilterKey) || filters[0]).name;
+  let view = canResumePosition && ["questions", "report"].includes(savedPosition.view)
+    ? savedPosition.view
+    : "questions";
+  const savedPage = Number(savedPosition?.page);
+  let page = canResumePosition && Number.isFinite(savedPage) ? Math.max(0, Math.trunc(savedPage)) : 0;
+  let currentQuestionId = canResumePosition ? String(savedPosition.questionId || "") : "";
+
+  function currentFilterKey() {
+    return filters.find((item) => item.name === filter)?.key || "13";
+  }
+
+  function positionPayload(extra = {}) {
+    return {
+      filterKey: currentFilterKey(),
+      view,
+      page,
+      questionId: view === "questions" ? currentQuestionId : "",
+      anchorId: view === "questions" ? currentQuestionId : "",
+      scrollY: window.scrollY,
+      ...extra
+    };
+  }
+
+  function checkpoint(extra) {
+    return recovery?.checkpoint("practice", positionPayload(extra));
+  }
+
+  recovery?.register("practice", () => positionPayload());
 
   function analysisSteps(q) {
     const map = {
@@ -128,6 +169,12 @@
     return rows.filter((item) => item.required).concat(rows.filter((item) => !item.required));
   }
 
+  if (currentQuestionId && view === "questions") {
+    const savedQuestionIndex = selected().findIndex((item) => item.id === currentQuestionId);
+    if (savedQuestionIndex >= 0) page = Math.floor(savedQuestionIndex / PAGE_SIZE);
+    else currentQuestionId = "";
+  }
+
   function stats(chapter = filter) {
     const all = P.filter((item) => item.chapter === chapter && item.required);
     const done = all.filter((item) => S.submitted[item.id]);
@@ -201,15 +248,15 @@
     review1314Nav?.classList.toggle("active", filter === REVIEW_1314);
     review1516Nav?.classList.toggle("active", filter === REVIEW_1516);
     review1718Nav?.classList.toggle("active", filter === REVIEW_1718);
+    const rows = selected();
+    const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    page = Math.max(0, Math.min(page, totalPages - 1));
     if (view === "report") {
       app.innerHTML = report();
       return;
     }
     const currentStats = stats();
-    const rows = selected();
     const challenges = rows.filter((item) => !item.required).length;
-    const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-    page = Math.max(0, Math.min(page, totalPages - 1));
     const pageStart = page * PAGE_SIZE;
     const visibleRows = rows.slice(pageStart, pageStart + PAGE_SIZE);
     const requiredBefore = rows.slice(0, pageStart).filter((item) => item.required).length;
@@ -235,59 +282,99 @@
       filter = filterButton.dataset.filter;
       view = "questions";
       page = 0;
+      currentQuestionId = "";
       location.hash = filterButton.dataset.key;
       render();
+      recovery?.suppressScroll();
       document.querySelector?.(".practice-filter")?.scrollIntoView({ block: "start" });
+      checkpoint();
       return;
     }
     const viewButton = event.target.closest("[data-view]");
     if (viewButton) {
       view = viewButton.dataset.view;
+      currentQuestionId = "";
       render();
+      recovery?.suppressScroll();
       scrollTo(0, 0);
+      checkpoint();
       return;
     }
     const pageButton = event.target.closest("[data-page]");
     if (pageButton && !pageButton.disabled) {
       page = +pageButton.dataset.page;
+      currentQuestionId = "";
       render();
+      recovery?.suppressScroll();
       document.querySelector?.(".pagination")?.scrollIntoView({ block: "start" });
+      checkpoint();
       return;
     }
     const pickButton = event.target.closest("[data-pick]");
     if (pickButton) {
-      S.answers[pickButton.dataset.pick] = +pickButton.dataset.index;
-      MathCore.save();
+      currentQuestionId = pickButton.dataset.pick;
+      S.answers[currentQuestionId] = +pickButton.dataset.index;
+      MathCore.save({ practiceId: currentQuestionId, practiceFields: ["answers"] });
       render();
+      checkpoint();
       return;
     }
     const submitButton = event.target.closest("[data-submit]");
     if (submitButton) {
-      S.submitted[submitButton.dataset.submit] = Date.now();
-      S.step[submitButton.dataset.submit] = 1;
-      MathCore.save();
+      currentQuestionId = submitButton.dataset.submit;
+      S.submitted[currentQuestionId] = Date.now();
+      S.step[currentQuestionId] = 1;
+      MathCore.save({ practiceId: currentQuestionId, practiceSubmit: true, practiceFields: ["answers", "submitted", "step"] });
       render();
-      document.getElementById(submitButton.dataset.submit)?.scrollIntoView({ block: "center" });
+      recovery?.suppressScroll();
+      document.getElementById(currentQuestionId)?.scrollIntoView({ block: "center" });
+      checkpoint();
       return;
     }
     const stepButton = event.target.closest("[data-qstep]");
     if (stepButton) {
-      S.step[stepButton.dataset.qstep] = +stepButton.dataset.step;
-      MathCore.save();
+      currentQuestionId = stepButton.dataset.qstep;
+      S.step[currentQuestionId] = +stepButton.dataset.step;
+      MathCore.save({ practiceId: currentQuestionId, practiceFields: ["step"] });
       render();
-      document.getElementById(stepButton.dataset.qstep)?.scrollIntoView({ block: "center" });
+      recovery?.suppressScroll();
+      document.getElementById(currentQuestionId)?.scrollIntoView({ block: "center" });
+      checkpoint();
+      return;
+    }
+    const aiButton = event.target.closest("[data-ask-ai]");
+    if (aiButton) {
+      currentQuestionId = aiButton.dataset.askAi;
+      checkpoint();
     }
   });
 
+  window.addEventListener("scroll", () => {
+    currentQuestionId = "";
+  }, { passive: true });
+
   window.addEventListener("hashchange", () => {
-    const next = filters.find((item) => item.key === hashKey());
+    const key = explicitHashKey();
+    const next = key ? filters.find((item) => item.key === key) : null;
     if (next && next.name !== filter) {
       filter = next.name;
       view = "questions";
       page = 0;
+      currentQuestionId = "";
       render();
+      checkpoint();
     }
   });
 
   render();
+  if (canResumePosition) {
+    recovery?.restore("practice", {
+      position: savedPosition,
+      anchorId: view === "questions" ? currentQuestionId : "",
+      label: view === "report" ? "练习报告" : `第 ${page + 1} 组练习`
+    });
+  } else {
+    checkpoint();
+  }
+  window.addEventListener("fumi-progress-updated", () => render());
 })();
