@@ -9,6 +9,7 @@
   diagramStyle.href = "assets/math-diagram-contrast.css";
   document.head.append(diagramStyle);
   const KEY = "fumi-math-course:v1";
+  const BACKUP_KEY = "fumi-math-course:backup:v1";
   const MAP_KEY = "fumi-math-map:learning-tools:v1";
   const REVIEW_CHAPTER = "第13·14章 复习练习";
   const REVIEW_CHAPTER_15_16 = "第15·16章 复习练习";
@@ -28,35 +29,189 @@
     { number: 17, name: "第17章 因式分解", domain: "代数变形", rootId: "domain-5", color: COLORS.pink },
     { number: 18, name: "第18章 分式", domain: "数与式", rootId: "domain-0", color: COLORS.blue }
   ];
-  const defaults = { lesson: {}, practice: { answers: {}, submitted: {}, step: {} }, updatedAt: null };
+  const defaults = { lesson: {}, practice: { answers: {}, submitted: {}, step: {} }, meta: { lesson: {}, lessonAnswers: {}, practice: {} }, updatedAt: null };
 
   function fresh() {
     return JSON.parse(JSON.stringify(defaults));
   }
 
-  function load() {
+  function safeObject(value) {
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  }
+
+  function normalize(saved) {
+    const source = safeObject(saved);
+    const practice = safeObject(source.practice);
+    const meta = safeObject(source.meta);
+    return {
+      lesson: safeObject(source.lesson),
+      practice: {
+        answers: safeObject(practice.answers),
+        submitted: safeObject(practice.submitted),
+        step: safeObject(practice.step)
+      },
+      meta: {
+        lesson: safeObject(meta.lesson),
+        lessonAnswers: safeObject(meta.lessonAnswers),
+        practice: safeObject(meta.practice)
+      },
+      updatedAt: Number(source.updatedAt) || 0
+    };
+  }
+
+  function readSnapshot(key) {
     try {
-      const saved = JSON.parse(localStorage.getItem(KEY) || "{}");
-      return {
-        lesson: saved.lesson && typeof saved.lesson === "object" ? saved.lesson : {},
-        practice: {
-          answers: saved.practice?.answers && typeof saved.practice.answers === "object" ? saved.practice.answers : {},
-          submitted: saved.practice?.submitted && typeof saved.practice.submitted === "object" ? saved.practice.submitted : {},
-          step: saved.practice?.step && typeof saved.practice.step === "object" ? saved.practice.step : {}
-        },
-        updatedAt: saved.updatedAt || null
-      };
+      const parsed = JSON.parse(localStorage.getItem(key) || "null");
+      return parsed && typeof parsed === "object" ? normalize(parsed) : null;
     } catch {
-      return fresh();
+      return null;
     }
+  }
+
+  function load() {
+    const primary = readSnapshot(KEY);
+    const backup = readSnapshot(BACKUP_KEY);
+    if (!primary && !backup) return fresh();
+    if (!primary) return backup;
+    if (!backup) return primary;
+    return backup.updatedAt > primary.updatedAt ? backup : primary;
+  }
+
+  function clone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function mergeSnapshots(localValue, remoteValue) {
+    const local = normalize(localValue);
+    const remote = normalize(remoteValue);
+    const result = normalize(clone(local));
+
+    const lessonIds = new Set([
+      ...Object.keys(local.lesson),
+      ...Object.keys(remote.lesson),
+      ...Object.keys(local.meta.lesson),
+      ...Object.keys(remote.meta.lesson)
+    ]);
+    lessonIds.forEach((lessonId) => {
+      const localLesson = safeObject(local.lesson[lessonId]);
+      const remoteLesson = safeObject(remote.lesson[lessonId]);
+      const localTime = Number(local.meta.lesson[lessonId]) || 0;
+      const remoteTime = Number(remote.meta.lesson[lessonId]) || 0;
+      const shell = remoteTime > localTime
+        ? { ...localLesson, ...remoteLesson }
+        : { ...remoteLesson, ...localLesson };
+      if (!localTime && !remoteTime) {
+        shell.done = Boolean(localLesson.done || remoteLesson.done);
+        shell.completedAt = Math.max(Number(localLesson.completedAt) || 0, Number(remoteLesson.completedAt) || 0) || undefined;
+      }
+      const localAnswers = safeObject(localLesson.answers);
+      const remoteAnswers = safeObject(remoteLesson.answers);
+      const answerIds = new Set([...Object.keys(localAnswers), ...Object.keys(remoteAnswers)]);
+      const answers = {};
+      answerIds.forEach((questionId) => {
+        const localAnswerTime = Number(local.meta.lessonAnswers[questionId]) || 0;
+        const remoteAnswerTime = Number(remote.meta.lessonAnswers[questionId]) || 0;
+        if (remoteAnswerTime > localAnswerTime) answers[questionId] = remoteAnswers[questionId];
+        else if (Object.prototype.hasOwnProperty.call(localAnswers, questionId)) answers[questionId] = localAnswers[questionId];
+        else answers[questionId] = remoteAnswers[questionId];
+        result.meta.lessonAnswers[questionId] = Math.max(localAnswerTime, remoteAnswerTime);
+      });
+      shell.answers = answers;
+      result.lesson[lessonId] = shell;
+      result.meta.lesson[lessonId] = Math.max(localTime, remoteTime);
+    });
+
+    const practiceIds = new Set([
+      ...Object.keys(local.practice.answers),
+      ...Object.keys(local.practice.submitted),
+      ...Object.keys(local.practice.step),
+      ...Object.keys(remote.practice.answers),
+      ...Object.keys(remote.practice.submitted),
+      ...Object.keys(remote.practice.step),
+      ...Object.keys(local.meta.practice),
+      ...Object.keys(remote.meta.practice)
+    ]);
+    practiceIds.forEach((questionId) => {
+      const localTime = Number(local.meta.practice[questionId]) || 0;
+      const remoteTime = Number(remote.meta.practice[questionId]) || 0;
+      ["answers", "submitted", "step"].forEach((field) => {
+        const localField = local.practice[field];
+        const remoteField = remote.practice[field];
+        if (remoteTime > localTime && Object.prototype.hasOwnProperty.call(remoteField, questionId)) {
+          result.practice[field][questionId] = remoteField[questionId];
+        } else if (Object.prototype.hasOwnProperty.call(localField, questionId)) {
+          result.practice[field][questionId] = localField[questionId];
+        } else if (Object.prototype.hasOwnProperty.call(remoteField, questionId)) {
+          result.practice[field][questionId] = remoteField[questionId];
+        }
+      });
+      result.meta.practice[questionId] = Math.max(localTime, remoteTime);
+    });
+    result.updatedAt = Math.max(local.updatedAt, remote.updatedAt);
+    return result;
   }
 
   let state = load();
 
-  function save() {
-    state.updatedAt = Date.now();
-    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+  function replaceRecord(target, source) {
+    Object.keys(target).forEach((key) => delete target[key]);
+    Object.assign(target, source);
+  }
+
+  function applySnapshot(nextValue) {
+    const next = normalize(nextValue);
+    replaceRecord(state.lesson, next.lesson);
+    replaceRecord(state.practice.answers, next.practice.answers);
+    replaceRecord(state.practice.submitted, next.practice.submitted);
+    replaceRecord(state.practice.step, next.practice.step);
+    replaceRecord(state.meta.lesson, next.meta.lesson);
+    replaceRecord(state.meta.lessonAnswers, next.meta.lessonAnswers);
+    replaceRecord(state.meta.practice, next.meta.practice);
+    state.updatedAt = next.updatedAt;
+  }
+
+  function markChange(change, timestamp) {
+    if (!change || typeof change !== "object") return;
+    if (change.lessonId && change.lessonAnswerId) {
+      state.meta.lessonAnswers[change.lessonAnswerId] = timestamp;
+    }
+    if (change.lessonId && !change.lessonAnswerId) {
+      state.meta.lesson[change.lessonId] = timestamp;
+    }
+    if (change.practiceId) {
+      state.meta.practice[change.practiceId] = timestamp;
+    }
+  }
+
+  function announceSave(ok, timestamp) {
+    try {
+      window.dispatchEvent(new CustomEvent("fumi-save-status", {
+        detail: { ok, timestamp }
+      }));
+    } catch {}
+  }
+
+  function save(change) {
+    const timestamp = Date.now();
+    markChange(change, timestamp);
+    const latest = load();
+    applySnapshot(mergeSnapshots(state, latest));
+    state.updatedAt = timestamp;
+    const payload = JSON.stringify(state);
+    let primary = false;
+    let backup = false;
+    try {
+      localStorage.setItem(KEY, payload);
+      primary = localStorage.getItem(KEY) === payload;
+    } catch {}
+    try {
+      localStorage.setItem(BACKUP_KEY, payload);
+      backup = localStorage.getItem(BACKUP_KEY) === payload;
+    } catch {}
+    const ok = primary || backup;
+    announceSave(ok, timestamp);
     syncMap();
+    return ok;
   }
 
   function practiceStats(predicate) {
@@ -315,6 +470,15 @@
   function escape(s) {
     return String(s ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[char]);
   }
+
+  window.addEventListener("storage", (event) => {
+    if (event.key !== KEY && event.key !== BACKUP_KEY) return;
+    const latest = load();
+    applySnapshot(mergeSnapshots(state, latest));
+    try {
+      window.dispatchEvent(new CustomEvent("fumi-progress-updated"));
+    } catch {}
+  });
 
   syncMap();
   window.MathCore = { state, save, pct, practiceStats, escape, syncMap };
