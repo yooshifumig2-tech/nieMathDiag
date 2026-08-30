@@ -11,9 +11,42 @@
     { key: "18", name: "第18章 分式", short: "第18章" }
   ];
   const hashKey = () => (location.hash.replace("#", "").match(/13|14|15|16|17|18/) || ["13"])[0];
-  let chapter = (chapters.find((item) => item.key === hashKey()) || chapters[0]).name;
+  const recovery = window.FumiRecovery;
+  const savedPosition = recovery?.read("learn");
+  const explicitHash = /13|14|15|16|17|18/.test(location.hash);
+  const savedChapterExists = chapters.some((item) => item.key === savedPosition?.chapterKey);
+  const initialChapterKey = explicitHash ? hashKey() : savedChapterExists ? savedPosition.chapterKey : hashKey();
+  let chapter = (chapters.find((item) => item.key === initialChapterKey) || chapters[0]).name;
   let current = (D.find((item) => item.chapter === chapter) || D[0]).id;
   const steps = {};
+  let lastAnchor = "";
+  let recoveredPosition = null;
+
+  if (savedPosition?.chapterKey === initialChapterKey) {
+    const savedLesson = D.find((item) => item.id === savedPosition.lessonId && item.chapter === chapter);
+    if (savedLesson) {
+      current = savedLesson.id;
+      steps[current] = Math.max(1, Math.min(4, Number(savedPosition.diagramStep) || 1));
+      lastAnchor = String(savedPosition.anchorId || "lesson-" + current);
+      recoveredPosition = savedPosition;
+    }
+  }
+
+  function positionSnapshot() {
+    const config = chapters.find((item) => item.name === chapter) || chapters[0];
+    return {
+      chapterKey: config.key,
+      lessonId: current,
+      diagramStep: steps[current] || 1,
+      anchorId: lastAnchor || "lesson-" + current,
+      scrollY: window.scrollY
+    };
+  }
+
+  function remember(anchorId) {
+    if (anchorId) lastAnchor = anchorId;
+    recovery?.flush("learn");
+  }
 
   function requiredQuestions(lesson) {
     return [lesson.inquiry, ...(lesson.checks || [])].filter(Boolean);
@@ -63,7 +96,7 @@
     app.innerHTML = `<section class="hero"><div><span class="kicker" style="color:#d9d3ff">人教版八年级上册 · 教学设计驱动</span><h1>第13—18章<br>数学学习工坊</h1><p>按“观察—追问—形成概念—即时检测—逐步图解”推进。学习证据会同步到思维导图，且不记录姓名、学校或性别。</p></div><div class="hero-stats"><span><b>${D.length}</b>个教学课时</span><span><b>${instantCount}</b>道即时题</span><span><b>${progress()}%</b>${currentConfig.short}进度</span><span><b>本地</b>自动保存</span></div></section>
       <div class="chapter-tabs">${chapters.map((item) => `<button data-chapter="${item.name}" data-key="${item.key}" class="${chapter === item.name ? "active" : ""}">${item.name}</button>`).join("")}</div>
       <div class="layout"><aside class="side">${lessons().map((item, index) => `<button data-lesson="${item.id}" class="${item.id === current ? "active" : ""} ${isLessonComplete(item) ? "done" : ""}"><small>课时 ${index + 1} · ${item.section}</small><b>${item.title}</b></button>`).join("")}</aside><article class="lesson">
-      <section class="card lesson-head"><div><span class="kicker">${lesson.chapter} · ${lesson.section}</span><h2>${lesson.title}</h2><ul class="objectives">${lesson.objectives.map((item) => `<li>${item}</li>`).join("")}</ul></div><div><b>建议 ${lesson.minutes} 分钟</b><div class="progressbar"><i style="width:${progress()}%"></i></div></div></section>
+      <section class="card lesson-head" id="lesson-${lesson.id}" data-progress-anchor><div><span class="kicker">${lesson.chapter} · ${lesson.section}</span><h2>${lesson.title}</h2><ul class="objectives">${lesson.objectives.map((item) => `<li>${item}</li>`).join("")}</ul></div><div><b>建议 ${lesson.minutes} 分钟</b><div class="progressbar"><i style="width:${progress()}%"></i></div></div></section>
       ${question(lesson.inquiry, true)}
       <section class="card"><span class="kicker">动态推演</span><h3>点击步骤，让关系或算理逐层出现</h3><div class="diagram">${MathDiagrams.render(lesson.inquiry.diagram, step, lesson.inquiry.id)}</div><div class="step-row">${[1, 2, 3, 4].map((number) => `<button data-step="${number}" class="${step === number ? "active" : ""}">步骤 ${number}</button>`).join("")}</div></section>
       <section class="card"><span class="kicker">形成概念</span><div class="concept-grid">${lesson.cards.map((card) => `<div class="concept"><b>${card[0]}</b><span>${card[1]}</span></div>`).join("")}</div></section>
@@ -79,12 +112,14 @@
       current = (lessons()[0] || D[0]).id;
       location.hash = chapterButton.dataset.key;
       render();
+      remember("lesson-" + current);
       return;
     }
     const lessonButton = event.target.closest("[data-lesson]");
     if (lessonButton) {
       current = lessonButton.dataset.lesson;
       render();
+      remember("lesson-" + current);
       document.querySelector(".lesson > .lesson-head")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
@@ -92,6 +127,7 @@
     if (stepButton) {
       steps[current] = +stepButton.dataset.step;
       render();
+      remember("lesson-" + current);
       return;
     }
     const answerButton = event.target.closest("[data-answer]");
@@ -100,8 +136,9 @@
       const lessonState = S.lesson[current] || (S.lesson[current] = { answers: {} });
       lessonState.answers = lessonState.answers || {};
       lessonState.answers[questionId] = +answerButton.dataset.index;
-      MathCore.save();
+      MathCore.save({ lessonId: current, lessonAnswerId: questionId });
       render();
+      remember("learn-q-" + questionId);
       document.getElementById(`learn-q-${questionId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -112,13 +149,15 @@
       const firstPending = requiredQuestions(lesson).find((item) => !isAnswered(lessonState, item));
       if (firstPending) {
         render();
+        remember("learn-q-" + firstPending.id);
         document.getElementById(`learn-q-${firstPending.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
       lessonState.done = true;
       lessonState.completedAt = Date.now();
-      MathCore.save();
+      MathCore.save({ lessonId: current });
       render();
+      remember("lesson-" + current);
     }
   });
 
@@ -127,9 +166,22 @@
     if (next && next.name !== chapter) {
       chapter = next.name;
       current = (lessons()[0] || D[0]).id;
+      lastAnchor = "lesson-" + current;
       render();
+      recovery?.flush("learn");
     }
   });
 
+  window.addEventListener("fumi-progress-updated", render);
+  recovery?.register("learn", positionSnapshot);
   render();
+  if (recoveredPosition) {
+    recovery?.restore("learn", {
+      position: recoveredPosition,
+      anchorId: lastAnchor,
+      label: chapter + " · 上次课时"
+    });
+  } else {
+    recovery?.flush("learn");
+  }
 })();
