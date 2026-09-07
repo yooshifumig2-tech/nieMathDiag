@@ -1,7 +1,7 @@
 "use strict";
 
 const CACHE_PREFIX = "fumi-math-static-";
-const CACHE_NAME = CACHE_PREFIX + "2026-08-30-v2";
+const CACHE_NAME = CACHE_PREFIX + "2026-09-07-semester-v1";
 const CACHE_READ_TIMEOUT = 2000;
 const CACHE_WRITE_TIMEOUT = 10000;
 const BACKGROUND_UPDATE_TIMEOUT = 15000;
@@ -10,6 +10,12 @@ const CORE_ASSETS = [
   "/index.html",
   "/math-learn.html",
   "/math-practice.html",
+  "/semester-review.html",
+  "/semester-practice.html",
+  "/assets/semester.css",
+  "/assets/semester-data.js",
+  "/assets/semester-store.js",
+  "/assets/semester.js",
   "/favicon.svg",
   "/assets/math-course.css",
   "/assets/math-course-enhancements.css",
@@ -102,7 +108,11 @@ async function navigationFallback(cache, request) {
     ? "/math-learn.html"
     : pathname === "/math-practice" || pathname === "/math-practice.html"
       ? "/math-practice.html"
-      : "/index.html";
+      : pathname === "/semester-review" || pathname === "/semester-review.html"
+        ? "/semester-review.html"
+        : pathname === "/semester-practice" || pathname === "/semester-practice.html"
+          ? "/semester-practice.html"
+          : "/index.html";
   const candidates = [request, shell, "/index.html"];
   const matches = await Promise.all(candidates.map((candidate) => safeCacheMatch(cache, candidate, { ignoreSearch: true })));
   return matches.find(Boolean) || null;
