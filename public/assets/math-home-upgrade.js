@@ -16,7 +16,9 @@
       [
         ["math-practice.html#review", "13·14复习"],
         ["math-practice.html#review15-16", "15·16复习"],
-        ["math-practice.html#review17-18", "17·18复习"]
+        ["math-practice.html#review17-18", "17·18复习"],
+        ["semester-review.html", "上册总复习"],
+        ["semester-practice.html", "上册综合练习"]
       ].forEach(([href, label]) => {
         let review = nav.querySelector(`a[href='${href}']`);
         if (!review) {
@@ -44,15 +46,17 @@
       const kicker = callout.querySelector(".section-kicker");
       setText(kicker, "人教版八年级上册交互学习");
       const heading = callout.querySelector("h2");
-      setText(heading, "第13—18章系统学习 · 第13—18章复习练习");
+      setText(heading, "八年级上册 · 学习、总复习与综合练习");
       const copy = callout.querySelector("h2 + p");
-      setText(copy, "按教材与教学设计完成48个课时；每课先做易错概念追问，再看动态图、完成即时检测。第13、14章、第15、16章及第17、18章均设以复习讲义为主的独立复习练习。");
+      setText(copy, "章节学习之外，新增20个总复习专题与100道分层练习。用24题综合检测检查六章知识，再根据学习报告回练错题；总复习进度独立保存，并支持下载备份。");
       const actions = callout.querySelector("h2 + p + p");
       if (actions) {
         [
           ["math-practice.html#review", "13·14复习练习"],
           ["math-practice.html#review15-16", "15·16复习练习"],
-          ["math-practice.html#review17-18", "17·18复习练习"]
+          ["math-practice.html#review17-18", "17·18复习练习"],
+          ["semester-review.html", "八上总复习"],
+          ["semester-practice.html", "八上综合练习"]
         ].forEach(([href, label]) => {
           if (actions.querySelector(`a[href='${href}']`)) return;
           const review = document.createElement("a");
