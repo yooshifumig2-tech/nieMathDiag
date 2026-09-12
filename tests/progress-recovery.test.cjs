@@ -1022,7 +1022,7 @@ test("service worker precaches every local shell asset and falls back offline", 
   await installPromise;
   assert.ok(precached.length >= 20);
   precached.forEach((url) => {
-    const relative = url === "/" ? "index.html" : url.replace(/^\//, "");
+    const relative = url === "/" ? "index.html" : new URL(url, "https://example.test").pathname.replace(/^\//, "");
     assert.equal(fs.existsSync(path.join(ROOT, "public", relative)), true, `missing ${url}`);
   });
 

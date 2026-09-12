@@ -2,9 +2,11 @@
   "use strict";
   // Each answer, completion, note and position is an independent record. Position
   // writes cannot replace answer records or clear an outstanding save failure.
-  const PREFIX="fumi-semester:v1:";
-  const BACKUP="fumi-semester:backup:v1:";
-  const DB="fumi-semester-progress-v1";
+  const lower=document.body?.dataset.progressScope==="grade8-lower";
+  const PREFIX=lower?"fumi-grade8-lower:v1:":"fumi-semester:v1:";
+  const BACKUP=lower?"fumi-grade8-lower:backup:v1:":"fumi-semester:backup:v1:";
+  const DB=lower?"fumi-grade8-lower-progress-v1":"fumi-semester-progress-v1";
+  const FORMAT=lower?"fumi-grade8-lower-progress":"fumi-semester-progress";
   const records=new Map(), pending=new Map();
   const writer=globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2);
   let clock=0, db=null, initialized=false, databaseAvailable=false;
@@ -62,7 +64,11 @@
         request.onsuccess=()=>{
           db=request.result;databaseAvailable=true;
           db.onversionchange=()=>{db.close();db=null;databaseAvailable=false;};
-          if(settled)hydrateDatabase().then(()=>{retry();emit();});
+          if(settled)hydrateDatabase().then(()=>{
+            for(const r of records.values())persist(r);
+            window.dispatchEvent(new CustomEvent("semester-progress-updated"));
+            emit();
+          });
           else finish(db);
         };
       }catch{finish(null);}
@@ -121,9 +127,9 @@
     for(const p of pending.values())p.local=writeLocal(p.record)||p.local;
     emit();
   }
-  function exportData(){return {format:"fumi-semester-progress",version:1,exportedAt:new Date().toISOString(),records:[...records.values()].map(copy)};}
+  function exportData(){return {format:FORMAT,version:1,exportedAt:new Date().toISOString(),records:[...records.values()].map(copy)};}
   function importData(payload){
-    if(payload?.format!=="fumi-semester-progress"||payload.version!==1||!Array.isArray(payload.records)||payload.records.length>4000)throw new Error("这不是本网站的总复习备份文件。");
+    if(payload?.format!==FORMAT||payload.version!==1||!Array.isArray(payload.records)||payload.records.length>4000)throw new Error(lower?"请选择八年级下学期的进度备份文件。":"这不是本网站的总复习备份文件。");
     if(payload.records.some(r=>!validRecord(r)))throw new Error("备份内容不完整，未导入任何记录。");
     let count=0;
     for(const r of payload.records)if(merge(r)){persist(r);count++;}
