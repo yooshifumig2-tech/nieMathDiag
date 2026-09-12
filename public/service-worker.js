@@ -1,13 +1,19 @@
 "use strict";
 
 const CACHE_PREFIX = "fumi-math-static-";
-const CACHE_NAME = CACHE_PREFIX + "2026-09-07-semester-v1";
+const CACHE_NAME = CACHE_PREFIX + "2026-09-12-lower-v1";
 const CACHE_READ_TIMEOUT = 2000;
 const CACHE_WRITE_TIMEOUT = 10000;
 const BACKGROUND_UPDATE_TIMEOUT = 15000;
 const CORE_ASSETS = [
   "/",
   "/index.html",
+  "/math-courses.html",
+  "/lower-learn.html",
+  "/lower-practice.html",
+  "/assets/grade8-lower.css",
+  "/assets/grade8-lower-data.js",
+  "/assets/grade8-lower.js",
   "/math-learn.html",
   "/math-practice.html",
   "/semester-review.html",
@@ -104,6 +110,8 @@ async function navigationFallback(cache, request) {
   if (!cache) return null;
   const url = new URL(request.url);
   const pathname = url.pathname.replace(/\/+$/, "") || "/";
+  const lowerShell={"/math-courses":"/math-courses.html","/math-courses.html":"/math-courses.html","/lower-learn":"/lower-learn.html","/lower-learn.html":"/lower-learn.html","/lower-practice":"/lower-practice.html","/lower-practice.html":"/lower-practice.html"}[pathname];
+  if(lowerShell)return await safeCacheMatch(cache,request,{ignoreSearch:true}) || await safeCacheMatch(cache,lowerShell,{ignoreSearch:true});
   const shell = pathname === "/math-learn" || pathname === "/math-learn.html"
     ? "/math-learn.html"
     : pathname === "/math-practice" || pathname === "/math-practice.html"
