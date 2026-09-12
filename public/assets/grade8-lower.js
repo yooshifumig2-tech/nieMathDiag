@@ -63,7 +63,7 @@
     status(S.status());rendering=false;
   }
   function changeStage(stage){state.stage=Math.max(0,Math.min(3,stage));S.set('position:stage-'+state.lesson,state.stage);if(state.stage===2)S.set('review:read-'+state.lesson,true);updateComplete(lessonBy(state.lesson));savePosition();render();}
-  function selectLesson(id){const l=lessonBy(id);state.lesson=l.id;state.view=page;state.stage=Number(S.get('position:stage-'+l.id,0))||0;savePosition();history.replaceState(null,'','#'+l.code);render();}
+  function selectLesson(id){const l=lessonBy(id);state.lesson=l.id;state.view=page;state.stage=Number(S.get('position:stage-'+l.id,0))||0;savePosition();render();}
   app.addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;
     if(d.choice){const q=all.find(q=>q.id===d.choice);if(!q||answer(q).submitted)return;S.set('answer:'+q.id,{...answer(q),choice:Number(d.index),submitted:false});render();return;}
@@ -93,8 +93,8 @@
     }
   });
   function normalizeState(value){const v=value&&typeof value==='object'?value:{};return {lesson:v.lesson==='all'&&page==='practice'?'all':lessonBy(v.lesson).id,stage:[0,1,2,3].includes(v.stage)?v.stage:0,view:v.view==='report'?'report':page,question:D.practice.some(q=>q.id===v.question)?v.question:D.practice[0].id,filter:['all','required','higher','wrong'].includes(v.filter)?v.filter:'all'};}
-  function readHash(){const h=decodeURIComponent(location.hash.slice(1));const q=h.startsWith('q-')?all.find(x=>x.id===h.slice(2)):null;const l=q?lessonBy(q.lesson):D.lessons.find(l=>l.code===h||l.id===h);if(l){const changed=state.lesson!==l.id;state.lesson=l.id;if(changed)state.stage=Number(S.get('position:stage-'+l.id,0))||0;if(q){state.view=page;state.question=q.id;state.filter='all';state.stage=q.kind==='inquiry'?0:3;}else if(changed&&page==='practice'){state.question=l.practice[0].id;state.filter='all';}}}
-  window.addEventListener('hashchange',()=>{readHash();savePosition();render();});
+  function readHash(){let h='';try{h=decodeURIComponent(location.hash.slice(1));}catch{return;}const q=h.startsWith('q-')?all.find(x=>x.id===h.slice(2)):null;const l=q?lessonBy(q.lesson):D.lessons.find(l=>l.code===h||l.id===h);if(!l)return;const changed=state.lesson!==l.id;state.lesson=l.id;state.view=page;if(changed)state.stage=Number(S.get('position:stage-'+l.id,0))||0;if(q){state.question=q.id;state.stage=q.kind==='inquiry'?0:3;}else if(page==='practice'&&!l.practice.some(x=>x.id===state.question))state.question=l.practice[0].id;if(page==='practice')state.filter='all';savePosition();history.replaceState(null,'',location.pathname+(location.search||''));}
+  window.addEventListener('hashchange',()=>{readHash();render();});
   window.addEventListener('semester-progress-updated',()=>{if(document.activeElement?.tagName==='TEXTAREA')return;render();});
   S.subscribe(status);
   S.ready.then(()=>{state=normalizeState(S.get(posKey,state));readHash();render();});

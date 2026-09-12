@@ -46,6 +46,12 @@ test('failed answer saves cannot be hidden by successfully saving the current po
 test('backup restores completion, notes, selections and reading position to a fresh device',async()=>{
  const a=harness();await a.mount();a.click({lesson:'g8s2-16-6'});a.click({stage:'2'});a.input('g8s2-16-6','完全平方不能漏中间项');const q=a.c.Grade8Lower.lessons[5].checks[0];a.click({choice:q.id,index:'1'});const payload=a.c.SemesterStore.exportData();const b=harness();await b.c.SemesterStore.ready;b.c.SemesterStore.importData(payload);await b.mount();assert.ok(b.app.innerHTML.includes('完全平方不能漏中间项'));assert.equal(b.c.SemesterStore.get('answer:'+q.id).choice,1);assert.equal(b.c.SemesterStore.get('position:learn').lesson,'g8s2-16-6');
 });
+test('explicit course links leave the report, and an old hash cannot reset later navigation',async()=>{
+ const map=new Map(),a=harness({map});await a.mount();a.click({view:'report'});
+ const linked=harness({map,hash:'#16.1.1'});await linked.mount();assert.ok(linked.app.innerHTML.includes('从一个具体问题开始'));assert.ok(!linked.app.innerHTML.includes('知识与作答证据'));
+ linked.click({lesson:'g8s2-16-4'});linked.click({stage:'2'});const restored=harness({map,hash:linked.c.location.hash});await restored.mount();assert.ok(restored.app.innerHTML.includes('最简二次根式的被开方数'));
+ const p=harness({page:'practice',hash:'#16.1.1'});await p.mount();p.change('lesson-filter','g8s2-16-6');p.change('level-filter','higher');const p2=harness({map:p.map,page:'practice',hash:p.c.location.hash});await p2.mount();assert.ok(p2.app.innerHTML.includes('已知x=2/'));assert.equal(p2.c.SemesterStore.get('position:practice').filter,'higher');
+});
 test('numeric answer choices agree with independent calculations and each is unique',async()=>{
  const h=harness();await h.mount();const sq=Math.sqrt;
  const expected={
