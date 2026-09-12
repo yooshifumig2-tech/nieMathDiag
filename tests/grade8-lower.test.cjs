@@ -74,3 +74,12 @@ test('all lower shells and assets are local and both URL forms have an offline f
  for(const p of ['math-courses','lower-learn','lower-practice'])for(const ext of ['','.html']){const cache={match:async key=>key==='/'+p+'.html'?new Response(p):undefined};const result=await c.navigationFallback(cache,new Request('https://example.test/'+p+ext+'?resume=1'));assert.equal(await result.text(),p);}
  for(const p of ['math-learn.html','math-practice.html','semester-review.html','semester-practice.html'])assert.ok(read('public/'+p).includes('href="math-courses.html"'));
 });
+test('new lower pages cannot load the upper-only storage implementation from an old cache',()=>{
+ const sw=read('public/service-worker.js');
+ for(const p of ['lower-learn.html','lower-practice.html']){
+   const html=read('public/'+p),src=html.match(/src="(assets\/semester-store\.js\?[^" ]+)"/)[1];
+   assert.equal(src,'assets/semester-store.js?v=lower-v2');assert.ok(sw.includes('"/'+src+'"'),'versioned store must also be available offline');
+   for(const m of html.matchAll(/(?:src|href)="(assets\/[^"#]+)"/g)){const pathname=new URL(m[1],'https://example.test/').pathname;assert.ok(fs.existsSync(path.join(ROOT,'public',pathname)));}
+ }
+ assert.ok(read('public/index.html').includes('assets/math-home-upgrade.js?v=lower-v2'));
+});

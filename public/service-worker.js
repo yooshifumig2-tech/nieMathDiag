@@ -1,7 +1,7 @@
 "use strict";
 
 const CACHE_PREFIX = "fumi-math-static-";
-const CACHE_NAME = CACHE_PREFIX + "2026-09-12-lower-v1";
+const CACHE_NAME = CACHE_PREFIX + "2026-09-12-lower-v2";
 const CACHE_READ_TIMEOUT = 2000;
 const CACHE_WRITE_TIMEOUT = 10000;
 const BACKGROUND_UPDATE_TIMEOUT = 15000;
@@ -21,6 +21,9 @@ const CORE_ASSETS = [
   "/assets/semester.css",
   "/assets/semester-data.js",
   "/assets/semester-store.js",
+  "/assets/semester-store.js?v=lower-v2",
+  "/assets/grade8-lower.js?v=lower-v2",
+  "/assets/math-home-upgrade.js?v=lower-v2",
   "/assets/semester.js",
   "/favicon.svg",
   "/assets/math-course.css",
